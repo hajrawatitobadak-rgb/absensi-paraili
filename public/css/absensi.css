@@ -1,0 +1,350 @@
+/* ═══════════════════════════════════════════════════════════════
+   HALAMAN ABSENSI — Standalone Kiosk Style
+═══════════════════════════════════════════════════════════════ */
+
+.absensi-page {
+  background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+.absensi-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 2rem; background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+}
+.absensi-brand { display: flex; align-items: center; gap: 1rem; color: white; }
+.absensi-brand i { font-size: 2.5rem; color: #3b82f6; }
+.absensi-brand h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+.absensi-brand p  { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin: 0; }
+
+.absensi-clock { text-align: right; color: white; }
+.jam-besar     { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 2px; color: #60a5fa; }
+.tanggal-kecil { font-size: 0.75rem; color: rgba(255,255,255,0.6); }
+
+/* ─── Main ───────────────────────────────────────────────────── */
+.absensi-main {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 1.5rem;
+}
+
+/* ─── Mode Selector ──────────────────────────────────────────── */
+.mode-selector {
+  display: flex; gap: 0.5rem; margin-bottom: 1.5rem;
+  background: rgba(255,255,255,0.1); padding: 0.35rem; border-radius: 50px;
+}
+.mode-btn {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.6rem 1.5rem; border: none; border-radius: 50px;
+  color: rgba(255,255,255,0.7); background: none;
+  font-size: 0.9rem; font-weight: 500; transition: all 0.25s ease;
+}
+.mode-btn.active { background: white; color: #1e293b; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+
+/* ─── Loading ────────────────────────────────────────────────── */
+.loading-area { text-align: center; color: white; }
+.spinner-large {
+  width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1);
+  border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+.loading-steps { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.5rem; text-align: left; }
+.step { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: rgba(255,255,255,0.6); }
+.step.loading { color: #fbbf24; }
+.step.done    { color: #4ade80; }
+
+/* ─── Scan Area ──────────────────────────────────────────────── */
+.scan-area { width: 100%; max-width: 960px; animation: fadeIn 0.4s ease; }
+.scan-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
+
+/* ─── Video ──────────────────────────────────────────────────── */
+.scan-camera-section { display: flex; flex-direction: column; gap: 0.75rem; }
+.video-wrapper { position: relative; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 0 0 3px rgba(59,130,246,0.3), 0 20px 40px rgba(0,0,0,0.4); }
+.video-wrapper video { width: 100%; display: block; max-height: 420px; object-fit: cover; transform: scaleX(-1); }
+.face-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1); }
+
+/* Scan frame corners */
+.scan-frame { position: absolute; inset: 0; pointer-events: none; }
+.corner { position: absolute; width: 30px; height: 30px; }
+.corner.tl { top: 12px; left: 12px; border-top: 3px solid #3b82f6; border-left: 3px solid #3b82f6; border-radius: 4px 0 0 0; }
+.corner.tr { top: 12px; right: 12px; border-top: 3px solid #3b82f6; border-right: 3px solid #3b82f6; border-radius: 0 4px 0 0; }
+.corner.bl { bottom: 12px; left: 12px; border-bottom: 3px solid #3b82f6; border-left: 3px solid #3b82f6; border-radius: 0 0 0 4px; }
+.corner.br { bottom: 12px; right: 12px; border-bottom: 3px solid #3b82f6; border-right: 3px solid #3b82f6; border-radius: 0 0 4px 0; }
+
+.scan-pulse {
+  position: absolute; inset: 0; background: linear-gradient(transparent 40%, rgba(59,130,246,0.08) 50%, transparent 60%);
+  animation: scanLine 3s ease infinite; pointer-events: none;
+}
+@keyframes scanLine {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scan-instruction {
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(8px);
+  color: white; padding: 0.65rem 1rem; border-radius: 8px;
+  font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;
+}
+
+/* ─── Info Panel ─────────────────────────────────────────────── */
+.scan-info-section { display: flex; flex-direction: column; gap: 1rem; }
+
+.detected-card {
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;
+  padding: 1rem; color: white; animation: fadeIn 0.3s ease;
+}
+.detected-photo { position: relative; display: inline-block; margin-bottom: 0.75rem; }
+.detected-photo img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #22c55e; display: block; }
+.detected-check {
+  position: absolute; bottom: 0; right: 0; background: #22c55e; color: white;
+  width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; border: 2px solid white;
+}
+.detected-info h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
+.detected-info p  { font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+.confidence-bar { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.75rem; }
+.bar { flex: 1; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); border-radius: 3px; transition: width 0.3s ease; }
+
+.status-panel {
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;
+}
+.status-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: rgba(255,255,255,0.8); }
+
+/* ─── Tombol Absen ───────────────────────────────────────────── */
+.btn-absen {
+  width: 100%; padding: 1rem; border: none; border-radius: 12px;
+  background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5);
+  font-size: 1rem; font-weight: 600; cursor: not-allowed;
+  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+  transition: all 0.3s ease;
+}
+.btn-absen i { font-size: 1.3rem; }
+.btn-absen.btn-ready {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white; cursor: pointer; box-shadow: 0 4px 20px rgba(59,130,246,0.5);
+  animation: pulseBtn 2s ease infinite;
+}
+.btn-absen.btn-ready:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); transform: translateY(-1px); }
+@keyframes pulseBtn {
+  0%, 100% { box-shadow: 0 4px 20px rgba(59,130,246,0.5); }
+  50%       { box-shadow: 0 4px 30px rgba(59,130,246,0.8); }
+}
+
+.mode-info {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.5rem; border-radius: 8px; font-size: 0.8rem; font-weight: 500;
+}
+.mode-masuk  { background: rgba(34,197,94,0.15); color: #4ade80; }
+.mode-pulang { background: rgba(249,115,22,0.15); color: #fb923c; }
+
+/* ─── Sukses / Gagal ─────────────────────────────────────────── */
+.sukses-area, .gagal-area { display: flex; justify-content: center; width: 100%; max-width: 480px; }
+.sukses-card, .gagal-card {
+  background: rgba(255,255,255,0.08); backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 20px;
+  padding: 2.5rem; color: white; text-align: center; width: 100%;
+  animation: fadeIn 0.4s ease;
+}
+.sukses-icon { font-size: 4rem; color: #4ade80; margin-bottom: 1rem; animation: bounce 0.5s ease; }
+.gagal-icon  { font-size: 4rem; color: #f87171; margin-bottom: 1rem; }
+.sukses-foto img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #4ade80; margin: 1rem 0; }
+.sukses-info h3 { font-size: 1.3rem; font-weight: 700; }
+.sukses-detail { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; text-align: left; }
+.sukses-row { display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; color: rgba(255,255,255,0.85); }
+.sukses-row i { width: 18px; color: #60a5fa; }
+
+@keyframes bounce {
+  0%   { transform: scale(0); opacity: 0; }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ─── Toast ──────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999;
+  padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.875rem;
+  font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 360px;
+}
+.toast.hidden { display: none; }
+.toast-error  { background: #991b1b; color: white; }
+.toast-info   { background: #1e40af; color: white; }
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .absensi-header { padding: 0.75rem 1rem; }
+  .jam-besar      { font-size: 1.4rem; }
+  .scan-layout    { grid-template-columns: 1fr; }
+  .scan-info-section { order: -1; }
+  .absensi-brand h1 { font-size: 1.1rem; }
+}
+@media (max-width: 480px) {
+  .mode-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+}
+
+@keyframes spin   { from { transform: rotate(0deg);  } to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ════════════════════════════════════════════════════════════════
+   TOMBOL KAMERA — di bawah video, tekan untuk absen
+════════════════════════════════════════════════════════════════ */
+
+/* Tombol diletakkan di bawah .video-wrapper, masih dalam .scan-camera-section */
+.scan-camera-section { gap: 0; }  /* kurangi gap agar tombol mepet ke video */
+
+.btn-capture-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .45rem;
+  background: none;
+  border: none;
+  cursor: not-allowed;
+  padding: .85rem 0 .5rem;
+  width: 100%;
+  transition: transform .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-capture-face:active.capture-ready { transform: scale(.93); }
+
+/* Lingkaran luar */
+.capture-outer {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  border: 4px solid rgba(255,255,255,.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .3s, box-shadow .3s;
+}
+
+/* Lingkaran dalam (ikon) */
+.capture-inner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  color: rgba(255,255,255,.35);
+  transition: background .3s, color .3s, box-shadow .3s;
+}
+
+/* Label */
+.btn-capture-face span {
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+  color: rgba(255,255,255,.35);
+  transition: color .3s;
+}
+
+/* ── State: READY (wajah dikenali + lokasi ok) ── */
+.btn-capture-face.capture-ready {
+  cursor: pointer;
+}
+.btn-capture-face.capture-ready .capture-outer {
+  border-color: #22c55e;
+  animation: captureRingPulse 1.5s ease infinite;
+}
+.btn-capture-face.capture-ready .capture-inner {
+  background: #22c55e;
+  color: #fff;
+  box-shadow: 0 0 18px rgba(34,197,94,.55);
+}
+.btn-capture-face.capture-ready span {
+  color: #4ade80;
+}
+
+@keyframes captureRingPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(34,197,94,.55); }
+  60%  { box-shadow: 0 0 0 16px rgba(34,197,94,0);  }
+  100% { box-shadow: 0 0 0 0   rgba(34,197,94,0);   }
+}
+
+/* ── State: PROCESSING ── */
+.btn-capture-face.capture-processing .capture-outer {
+  border-color: #3b82f6;
+}
+.btn-capture-face.capture-processing .capture-inner {
+  background: #3b82f6;
+  color: #fff;
+}
+.btn-capture-face.capture-processing .capture-inner i {
+  animation: rotateSpin .7s linear infinite;
+}
+.btn-capture-face.capture-processing span {
+  color: #93c5fd;
+}
+@keyframes rotateSpin { to { transform: rotate(360deg); } }
+
+/* ════════════════════════════════════════════════════════════════
+   BRANDING DESA PARAILI — KABUPATEN MAMUJU TENGAH
+════════════════════════════════════════════════════════════════ */
+
+.absensi-header {
+  padding: .85rem 1.75rem;
+  min-height: 80px;
+}
+
+/* Logo pemda */
+.logo-pemda {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.45));
+  flex-shrink: 0;
+}
+
+.logo-fallback {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  align-items: center; justify-content: center;
+  font-size: 2rem; color: #60a5fa; flex-shrink: 0;
+}
+
+/* Teks brand */
+.brand-text { display: flex; flex-direction: column; gap: .05rem; }
+
+.brand-kab {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: .3px;
+}
+
+.brand-sub {
+  font-size: .72rem;
+  color: rgba(255,255,255,.5);
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Responsive header */
+@media (max-width: 600px) {
+  .absensi-header  { padding: .65rem 1rem; }
+  .logo-pemda      { width: 48px; height: 48px; }
+  .brand-kab       { display: none; }
+  .brand-title     { font-size: 1rem; }
+  .brand-sub       { display: none; }
+  .jam-besar       { font-size: 1.5rem; }
+}

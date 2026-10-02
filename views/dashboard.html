@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Sistem Absensi Desa Paraili</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-fingerprint"></i>
+      <span>Absensi Desa Paraili Kecamatan Topoyo </span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="nav-item active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+      <a href="/karyawan/daftar" class="nav-item"><i class="fas fa-users"></i><span>Pegawai</span></a>
+      <a href="/karyawan/registrasi" class="nav-item"><i class="fas fa-user-plus"></i><span>Registrasi Wajah</span></a>
+      <a href="/absensi/scan" class="nav-item" target="_blank"><i class="fas fa-camera"></i><span>Halaman Absensi</span></a>
+      <a href="/laporan/absensi" class="nav-item"><i class="fas fa-chart-bar"></i><span>Laporan</span></a>
+      <a href="/pengaturan" class="nav-item"><i class="fas fa-cog"></i><span>Pengaturan</span></a>
+      <a href="/panduan" class="nav-item" target="_blank"><i class="fas fa-mobile-alt"></i><span>Akses HP/Online</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i><span>Keluar</span></button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <div class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title">
+        <h2>Dashboard</h2>
+        <span id="tglHariIni"></span>
+      </div>
+      <div class="topbar-user">
+        <i class="fas fa-user-circle"></i>
+        <span id="namaUser">Admin</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon"><i class="fas fa-users"></i></div>
+          <div class="stat-info">
+            <h3 id="totalKaryawan">-</h3>
+            <p>Total Pegawai</p>
+          </div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+          <div class="stat-info">
+            <h3 id="totalHadir">-</h3>
+            <p>Hadir Hari Ini</p>
+          </div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon"><i class="fas fa-user-times"></i></div>
+          <div class="stat-info">
+            <h3 id="totalBelum">-</h3>
+            <p>Belum Absen</p>
+          </div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon"><i class="fas fa-clock"></i></div>
+          <div class="stat-info">
+            <h3 id="totalTerlambat">-</h3>
+            <p>Terlambat</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart + Tabel -->
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-line"></i> Kehadiran Bulan Ini</h3>
+          </div>
+          <div class="card-body">
+            <canvas id="grafikBulan" height="120"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-list"></i> Absensi Hari Ini</h3>
+            <span id="badgeHadir" class="badge badge-green">0 hadir</span>
+          </div>
+          <div class="card-body table-responsive">
+            <table class="table" id="tabelHariIni">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Masuk</th>
+                  <th>Pulang</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="bodyHariIni">
+                <tr><td colspan="4" class="text-center text-muted">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Format tanggal
+    const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+    document.getElementById('tglHariIni').textContent = new Date().toLocaleDateString('id-ID', opts);
+
+    // Cek session
+    fetch('/auth/me').then(r => r.json()).then(d => {
+      if (!d.success) return window.location.href = '/login';
+      document.getElementById('namaUser').textContent = d.user.username;
+    });
+
+    // Load statistik
+    async function loadStats() {
+      const res  = await fetch('/absensi/api/stats');
+      const json = await res.json();
+      if (!json.success) return;
+      const d = json.data;
+      document.getElementById('totalKaryawan').textContent  = d.total_karyawan;
+      document.getElementById('totalHadir').textContent     = d.hadir;
+      document.getElementById('totalBelum').textContent     = d.belum_absen;
+      document.getElementById('totalTerlambat').textContent = d.terlambat;
+      document.getElementById('badgeHadir').textContent     = `${d.hadir} hadir`;
+    }
+
+    // Load tabel hari ini
+    async function loadHariIni() {
+      const res  = await fetch('/absensi/api/hari-ini');
+      const json = await res.json();
+      const tbody = document.getElementById('bodyHariIni');
+
+      if (!json.success || json.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Belum ada absensi hari ini</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = json.data.map(row => `
+        <tr>
+          <td>
+            <div class="user-info">
+              <img src="${row.foto || '/images/default-avatar.svg'}" class="avatar-sm" alt="${row.nama}" onerror="this.src='/images/default-avatar.svg'">
+              <div>
+                <strong>${row.nama}</strong>
+                <small>${row.departemen || ''}</small>
+              </div>
+            </div>
+          </td>
+          <td>${row.jam_masuk || '-'}</td>
+          <td>${row.jam_pulang || '-'}</td>
+          <td><span class="badge ${row.status === 'terlambat' ? 'badge-orange' : 'badge-green'}">${row.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Load grafik
+    async function loadGrafik() {
+      const now  = new Date();
+      const bln  = String(now.getMonth() + 1).padStart(2, '0');
+      const thn  = now.getFullYear();
+      const res  = await fetch(`/laporan/api/grafik-bulan?bulan=${bln}&tahun=${thn}`);
+      const json = await res.json();
+
+      const labels  = json.data.map(d => d.tanggal.slice(8)); // tanggal saja
+      const hadir   = json.data.map(d => d.hadir);
+      const telat   = json.data.map(d => d.terlambat);
+
+      const ctx = document.getElementById('grafikBulan').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Hadir', data: hadir, backgroundColor: '#22c55e99', borderColor: '#22c55e', borderWidth: 2, borderRadius: 4 },
+            { label: 'Terlambat', data: telat, backgroundColor: '#f9731699', borderColor: '#f97316', borderWidth: 2, borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+    }
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+
+    // Sidebar toggle
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+
+    // Init
+    loadStats();
+    loadHariIni();
+    loadGrafik();
+    setInterval(loadStats, 30000);
+    setInterval(loadHariIni, 30000);
+  </script>
+</body>
+</html>
+

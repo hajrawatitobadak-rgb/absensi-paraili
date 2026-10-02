@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panduan Akses HP - Absensi Desa Paraili</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+    .header{background:linear-gradient(135deg,#0b1e3d,#1a4a6b);padding:1.5rem;text-align:center;color:#fff}
+    .header img{width:60px;height:60px;object-fit:contain;margin-bottom:.75rem;display:block;margin-left:auto;margin-right:auto}
+    .header h1{font-size:1.25rem;font-weight:800}
+    .header p{font-size:.78rem;color:rgba(255,255,255,.55);margin-top:.25rem}
+    .container{max-width:640px;margin:0 auto;padding:1.25rem}
+
+    /* IP Card */
+    .ip-card{background:#fff;border-radius:14px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:1.25rem;border:2px solid #3b82f6;text-align:center}
+    .ip-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:.35rem}
+    .ip-value{font-size:1.75rem;font-weight:900;color:#1d4ed8;letter-spacing:2px;font-variant-numeric:tabular-nums;word-break:break-all}
+    .ip-sub{font-size:.78rem;color:#94a3b8;margin-top:.25rem}
+    .btn-copy{display:inline-flex;align-items:center;gap:.4rem;background:#eff6ff;color:#3b82f6;border:1.5px solid #bfdbfe;border-radius:8px;padding:.45rem 1.1rem;font-size:.82rem;font-weight:600;cursor:pointer;margin-top:.85rem;transition:background .2s}
+    .btn-copy:hover{background:#dbeafe}
+
+    /* Quick links */
+    .quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem}
+    .quick-btn{display:flex;flex-direction:column;align-items:center;gap:.35rem;background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:1rem .75rem;text-decoration:none;color:#1e293b;font-size:.8rem;font-weight:600;box-shadow:0 1px 6px rgba(0,0,0,.05);transition:all .2s;text-align:center}
+    .quick-btn:hover{border-color:#3b82f6;background:#eff6ff}
+    .quick-btn i{font-size:1.5rem}
+    .quick-btn.green i{color:#22c55e}
+    .quick-btn.blue  i{color:#3b82f6}
+    .quick-btn small{font-size:.67rem;color:#94a3b8;word-break:break-all}
+
+    /* Section */
+    .section-title{font-size:.875rem;font-weight:700;color:#374151;margin:.25rem 0 .65rem;display:flex;align-items:center;gap:.5rem}
+    .section-title i{color:#3b82f6}
+
+    /* Steps */
+    .steps{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.25rem}
+    .step{background:#fff;border-radius:12px;padding:1rem;box-shadow:0 1px 6px rgba(0,0,0,.05);display:flex;align-items:flex-start;gap:.85rem}
+    .step-num{width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;font-weight:800;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .step b{display:block;font-size:.82rem;margin-bottom:.2rem}
+    .step p{font-size:.76rem;color:#6b7280;line-height:1.55}
+    .step code{background:#f1f5f9;border:1px solid #e2e8f0;padding:.1rem .4rem;border-radius:4px;font-size:.75rem;color:#0f172a;word-break:break-all}
+
+    /* Warning */
+    .warn{background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:1rem;margin-bottom:1.25rem}
+    .warn-title{font-size:.82rem;font-weight:700;color:#991b1b;margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem}
+    .warn p{font-size:.76rem;color:#7f1d1d;line-height:1.55;margin-bottom:.4rem}
+    .warn code{display:block;background:#fff;border:1px solid #fecaca;border-radius:6px;padding:.5rem .75rem;font-size:.72rem;color:#1e293b;margin-top:.35rem;word-break:break-all}
+
+    /* Online section */
+    .online-card{background:linear-gradient(135deg,#0f2d52,#1a4a6b);border-radius:14px;padding:1.25rem;color:#fff;margin-bottom:1.25rem}
+    .online-card h3{font-size:.95rem;font-weight:700;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+    .online-card h3 i{color:#60a5fa}
+    .online-step{display:flex;align-items:flex-start;gap:.65rem;margin-bottom:.6rem}
+    .online-step .n{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem}
+    .online-step div b{display:block;font-size:.8rem;color:#fff}
+    .online-step div p{font-size:.73rem;color:rgba(255,255,255,.65);line-height:1.5;margin-top:.1rem}
+    .online-step div a{color:#60a5fa;font-size:.73rem}
+    .badge-free{display:inline-flex;align-items:center;gap:.3rem;background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:.2rem .6rem;font-size:.68rem;color:#4ade80;margin-left:.4rem}
+
+    .footer{text-align:center;font-size:.7rem;color:#94a3b8;padding:1rem 0 2rem}
+  </style>
+</head>
+<body>
+<div class="header">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Lambang_Kabupaten_Mamuju_Tengah.png/100px-Lambang_Kabupaten_Mamuju_Tengah.png"
+       alt="Logo" onerror="this.style.display='none'">
+  <h1>Panduan Akses dari HP &amp; Internet</h1>
+  <p>Sistem Absensi Desa Paraili · Kab. Mamuju Tengah</p>
+</div>
+
+<div class="container">
+
+  <!-- IP Server -->
+  <div class="ip-card">
+    <div class="ip-label"><i class="fas fa-server"></i> Alamat Server (IP Komputer)</div>
+    <div class="ip-value" id="ipVal">Memuat...</div>
+    <div class="ip-sub">Port: <strong>3000</strong> &nbsp;|&nbsp; Pastikan HP &amp; komputer di WiFi yang sama</div>
+    <button class="btn-copy" onclick="salinURL()">
+      <i class="fas fa-copy" id="copyIcon"></i>
+      <span id="copyTxt">Salin URL Absensi</span>
+    </button>
+  </div>
+
+  <!-- Tombol cepat -->
+  <div class="quick-grid">
+    <a href="/absensi/scan" class="quick-btn green" id="btnAbsensi">
+      <i class="fas fa-camera"></i>
+      <span>Buka Absensi</span>
+      <small id="urlAbsensi">...</small>
+    </a>
+    <a href="/login" class="quick-btn blue" id="btnAdmin">
+      <i class="fas fa-user-shield"></i>
+      <span>Login Admin</span>
+      <small id="urlAdmin">...</small>
+    </a>
+  </div>
+
+  <!-- Android -->
+  <div class="section-title"><i class="fab fa-android"></i> Android (Chrome)</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div><b>Sambungkan ke WiFi yang sama</b><p>HP Android &amp; komputer harus terhubung ke router / hotspot WiFi yang sama.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div><b>Buka Chrome di HP</b><p>Ketik di address bar: <code id="urlAndroid">http://...:3000/absensi/scan</code></p></div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div><b>Izinkan Kamera &amp; Lokasi</b><p>Ketuk <strong>Izinkan</strong> saat Chrome meminta izin kamera dan lokasi.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div><b>Tambah ke Homescreen (opsional)</b><p>Ketuk ⋮ → <strong>Tambahkan ke layar utama</strong> → ikon aplikasi muncul di homescreen.</p></div>
+    </div>
+  </div>
+
+  <!-- iPhone -->
+  <div class="section-title"><i class="fab fa-apple"></i> iPhone / iPad (Safari)</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div><b>Sambungkan ke WiFi yang sama</b><p>iPhone &amp; komputer harus di WiFi / hotspot yang sama.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div><b>Buka <u>Safari</u> (bukan Chrome)</b><p>Ketik: <code id="urlIOS">http://...:3000/absensi/scan</code><br><span style="color:#ef4444;font-size:.72rem">⚠️ Gunakan Safari agar kamera &amp; GPS bekerja di iOS.</span></p></div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div><b>Izinkan Kamera &amp; Lokasi</b><p>Ketuk <strong>Izinkan</strong> saat Safari meminta izin.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div><b>Tambah ke Homescreen (opsional)</b><p>Ketuk ikon <strong>Bagikan</strong> (□↑) → <strong>Tambahkan ke Layar Utama</strong> → Tambahkan.</p></div>
+    </div>
+  </div>
+
+  <!-- Firewall -->
+  <div class="warn">
+    <div class="warn-title"><i class="fas fa-shield-alt"></i> HP tidak bisa akses server? — Buka firewall</div>
+    <p>Windows Firewall mungkin memblokir koneksi dari HP. Jalankan perintah ini di <strong>Command Prompt sebagai Administrator</strong>:</p>
+    <code>netsh advfirewall firewall add rule name="Absensi-NodeJS" dir=in action=allow protocol=TCP localport=3000</code>
+    <p style="margin-top:.5rem">Atau: <strong>Windows Defender Firewall</strong> → Allow an app → cari <strong>Node.js</strong> → centang Private &amp; Public.</p>
+  </div>
+
+  <!-- ONLINE via Railway -->
+  <div class="online-card">
+    <h3><i class="fas fa-globe"></i> Cara Online — Akses dari Mana Saja <span class="badge-free"><i class="fas fa-gift"></i> Gratis</span></h3>
+
+    <div class="online-step">
+      <div class="n">1</div>
+      <div><b>Buat akun Railway.app</b><p>Buka <a href="https://railway.app" target="_blank">railway.app</a> → Sign Up dengan GitHub.</p></div>
+    </div>
+    <div class="online-step">
+      <div class="n">2</div>
+      <div><b>Upload kode ke GitHub</b><p>Buka <a href="https://github.com" target="_blank">github.com</a> → New Repository → upload semua file dari folder <code style="color:#93c5fd">absensi-app</code>.</p></div>
+    </div>
+    <div class="online-step">
+      <div class="n">3</div>
+      <div><b>Deploy di Railway</b><p>Di Railway → New Project → Deploy from GitHub Repo → pilih repo absensi.</p></div>
+    </div>
+    <div class="online-step">
+      <div class="n">4</div>
+      <div><b>Set Environment Variables</b><p>Di Railway → Variables → tambahkan:<br>
+        <code style="color:#93c5fd">SESSION_SECRET</code> = string panjang acak<br>
+        <code style="color:#93c5fd">NODE_ENV</code> = production
+      </p></div>
+    </div>
+    <div class="online-step">
+      <div class="n">5</div>
+      <div><b>Dapat URL publik otomatis</b><p>Railway memberi URL seperti <code style="color:#93c5fd">https://absensi-xxx.railway.app</code> — bisa diakses dari HP mana saja tanpa WiFi.</p></div>
+    </div>
+    <p style="font-size:.73rem;color:rgba(255,255,255,.5);margin-top:.5rem">⚠️ Untuk deploy online, database SQLite perlu diganti ke PostgreSQL (Railway menyediakan gratis). Hubungi pengembang untuk bantuan migrasi.</p>
+  </div>
+
+  <div class="footer">Sistem Absensi Desa Paraili · Kab. Mamuju Tengah © 2026</div>
+</div>
+
+<script>
+async function loadInfo() {
+  try {
+    const r = await fetch('/api/server-info');
+    const d = await r.json();
+    const ip = d.ip, port = d.port;
+    const urlScan = `http://${ip}:${port}/absensi/scan`;
+    const urlLogin = `http://${ip}:${port}/login`;
+
+    document.getElementById('ipVal').textContent       = ip;
+    document.getElementById('urlAbsensi').textContent  = `${ip}:${port}/absensi/scan`;
+    document.getElementById('urlAdmin').textContent    = `${ip}:${port}/login`;
+    document.getElementById('urlAndroid').textContent  = urlScan;
+    document.getElementById('urlIOS').textContent      = urlScan;
+    window._urlAbsensi = urlScan;
+  } catch {
+    const h = window.location.hostname;
+    document.getElementById('ipVal').textContent = h;
+    document.getElementById('urlAndroid').textContent = `http://${h}:3000/absensi/scan`;
+    document.getElementById('urlIOS').textContent     = `http://${h}:3000/absensi/scan`;
+    window._urlAbsensi = `http://${h}:3000/absensi/scan`;
+  }
+}
+
+function salinURL() {
+  const url = window._urlAbsensi || window.location.origin + '/absensi/scan';
+  navigator.clipboard.writeText(url).then(() => {
+    document.getElementById('copyIcon').className = 'fas fa-check';
+    document.getElementById('copyTxt').textContent = 'Tersalin!';
+    setTimeout(() => {
+      document.getElementById('copyIcon').className = 'fas fa-copy';
+      document.getElementById('copyTxt').textContent = 'Salin URL Absensi';
+    }, 2500);
+  }).catch(() => { prompt('Salin URL ini:', url); });
+}
+
+loadInfo();
+</script>
+</body>
+</html>

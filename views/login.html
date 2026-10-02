@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0f2d52">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Admin Absensi">
+  <link rel="manifest" href="/manifest.json">
+  <title>Login Admin — Absensi Desa Paraili</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0b1e3d 0%, #0f2d52 40%, #1a4a6b 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      position: relative; overflow: hidden;
+    }
+
+    /* Subtle background pattern */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(59,130,246,.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(16,185,129,.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ─── Card ─────────────────────────────────────────────────────────────── */
+    .login-wrap {
+      width: 100%; max-width: 440px;
+      position: relative; z-index: 1;
+    }
+
+    .login-card {
+      background: rgba(255,255,255,.97);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.1);
+      overflow: hidden;
+    }
+
+    /* ─── Header strip ─────────────────────────────────────────────────────── */
+    .login-header {
+      background: linear-gradient(135deg, #0f2d52, #1a4a6b);
+      padding: 1.75rem 2rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+    .login-header::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #22c55e, #3b82f6);
+    }
+
+    .header-logos {
+      display: flex; align-items: center; justify-content: center; gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .logo-pemda {
+      width: 70px; height: 70px; object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,.4));
+    }
+    .logo-divider {
+      width: 1px; height: 60px;
+      background: rgba(255,255,255,.25);
+    }
+    .logo-icon {
+      width: 70px; height: 70px; border-radius: 50%;
+      background: rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; color: #60a5fa;
+      border: 2px solid rgba(255,255,255,.2);
+    }
+
+    .header-gov {
+      font-size: .65rem; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: rgba(255,255,255,.55);
+      margin-bottom: .2rem;
+    }
+    .header-title {
+      font-size: 1.2rem; font-weight: 800; color: #fff;
+      line-height: 1.3; margin-bottom: .15rem;
+    }
+    .header-sub {
+      font-size: .75rem; color: rgba(255,255,255,.5);
+    }
+    .header-badge {
+      display: inline-flex; align-items: center; gap: .35rem;
+      margin-top: .75rem;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 20px; padding: .3rem .85rem;
+      font-size: .72rem; color: rgba(255,255,255,.7);
+    }
+    .header-badge i { color: #f59e0b; }
+
+    /* ─── Form body ─────────────────────────────────────────────────────────── */
+    .login-body { padding: 2rem; }
+
+    .form-label {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .82rem; font-weight: 600; color: #374151;
+      margin-bottom: .45rem;
+    }
+    .form-label i { color: #6b7280; font-size: .75rem; }
+
+    .input-wrap { position: relative; margin-bottom: 1.1rem; }
+
+    .form-input {
+      width: 100%;
+      padding: .7rem 1rem .7rem 2.6rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: .9rem;
+      background: #f9fafb;
+      color: #111827;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: #3b82f6;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+    }
+    .form-input.input-error { border-color: #ef4444; background: #fff5f5; }
+    .form-input.input-ok    { border-color: #22c55e; }
+
+    .input-icon {
+      position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
+      color: #9ca3af; font-size: .85rem; pointer-events: none;
+      transition: color .2s;
+    }
+    .input-wrap:focus-within .input-icon { color: #3b82f6; }
+
+    .btn-eye {
+      position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: #9ca3af; cursor: pointer;
+      padding: .25rem; font-size: .85rem; transition: color .2s;
+    }
+    .btn-eye:hover { color: #374151; }
+
+    /* ─── Captcha ───────────────────────────────────────────────────────────── */
+    .captcha-box {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .8rem 1rem;
+      background: #f3f4f6; border: 2px solid #e5e7eb;
+      border-radius: 10px; margin-bottom: 1.1rem;
+      cursor: pointer; user-select: none;
+      transition: border-color .2s;
+    }
+    .captcha-box:hover { border-color: #d1d5db; }
+    .captcha-box.checked { border-color: #22c55e; background: #f0fdf4; }
+
+    .captcha-checkbox {
+      width: 22px; height: 22px; border-radius: 3px;
+      border: 2px solid #9ca3af; background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .2s;
+    }
+    .captcha-box.checked .captcha-checkbox {
+      background: #22c55e; border-color: #22c55e; color: #fff;
+    }
+    .captcha-label { font-size: .85rem; color: #374151; flex: 1; }
+    .captcha-logo  { font-size: 1.5rem; color: #6b7280; }
+
+    /* ─── Alert ─────────────────────────────────────────────────────────────── */
+    .alert {
+      border-radius: 10px; padding: .7rem 1rem;
+      font-size: .82rem; display: flex; align-items: flex-start; gap: .5rem;
+      margin-bottom: 1rem;
+    }
+    .alert.hidden { display: none; }
+    .alert-danger  { background: #fef2f2; color: #991b1b; border: 1.5px solid #fecaca; }
+    .alert-success { background: #f0fdf4; color: #166534; border: 1.5px solid #bbf7d0; }
+    .alert-warning { background: #fffbeb; color: #92400e; border: 1.5px solid #fde68a; }
+    .alert i { margin-top: .05rem; flex-shrink: 0; }
+
+    /* Attempt counter */
+    .attempt-bar {
+      display: flex; gap: .35rem; margin-bottom: 1rem;
+    }
+    .attempt-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #e5e7eb; transition: background .3s;
+    }
+    .attempt-dot.used { background: #ef4444; }
+
+    /* ─── Submit button ─────────────────────────────────────────────────────── */
+    .btn-login {
+      width: 100%; padding: .85rem;
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: .95rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      transition: all .2s;
+      box-shadow: 0 4px 14px rgba(37,99,235,.35);
+    }
+    .btn-login:hover:not(:disabled) {
+      background: linear-gradient(135deg, #1e40af, #1d4ed8);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37,99,235,.45);
+    }
+    .btn-login:active:not(:disabled) { transform: translateY(0); }
+    .btn-login:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    /* ─── Lockout countdown ─────────────────────────────────────────────────── */
+    .lockout-bar {
+      height: 4px; background: #fee2e2; border-radius: 2px;
+      overflow: hidden; margin-top: .75rem; display: none;
+    }
+    .lockout-fill {
+      height: 100%; background: #ef4444; border-radius: 2px;
+      transition: width 1s linear;
+    }
+
+    /* ─── Footer ────────────────────────────────────────────────────────────── */
+    .login-footer {
+      padding: 1rem 2rem 1.5rem;
+      border-top: 1px solid #f3f4f6;
+      text-align: center;
+    }
+    .footer-link {
+      display: inline-flex; align-items: center; gap: .4rem;
+      color: #3b82f6; font-size: .82rem; text-decoration: none;
+      padding: .5rem 1rem; border-radius: 8px;
+      border: 1.5px solid #dbeafe; background: #eff6ff;
+      transition: all .2s;
+    }
+    .footer-link:hover {
+      background: #dbeafe; border-color: #93c5fd;
+    }
+
+    .footer-copy {
+      margin-top: .75rem;
+      font-size: .7rem; color: #9ca3af;
+    }
+
+    /* ─── Responsive ────────────────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .login-header { padding: 1.5rem 1.25rem; }
+      .login-body   { padding: 1.5rem 1.25rem; }
+      .logo-pemda   { width: 56px; height: 56px; }
+      .logo-icon    { width: 56px; height: 56px; font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-card">
+
+    <!-- ── Header ── -->
+    <div class="login-header">
+      <div class="header-logos">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Lambang_Kabupaten_Mamuju_Tengah.png/150px-Lambang_Kabupaten_Mamuju_Tengah.png"
+          alt="Logo Kabupaten Mamuju Tengah"
+          class="logo-pemda"
+          onerror="this.style.display='none'">
+        <div class="logo-divider"></div>
+        <div class="logo-icon"><i class="fas fa-fingerprint"></i></div>
+      </div>
+      <p class="header-gov">Pemerintah Kabupaten Mamuju Tengah</p>
+      <h1 class="header-title">Absensi Desa Paraili</h1>
+      <p class="header-sub">Kecamatan Budong-Budong</p>
+      <div class="header-badge">
+        <i class="fas fa-shield-alt"></i>
+        Panel Administrator
+      </div>
+    </div>
+
+    <!-- ── Form ── -->
+    <div class="login-body">
+
+      <!-- Indikator percobaan gagal (maks 5) -->
+      <div class="attempt-bar" id="attemptBar">
+        <div class="attempt-dot" id="d1"></div>
+        <div class="attempt-dot" id="d2"></div>
+        <div class="attempt-dot" id="d3"></div>
+        <div class="attempt-dot" id="d4"></div>
+        <div class="attempt-dot" id="d5"></div>
+        <span style="font-size:.72rem;color:#9ca3af;margin-left:.25rem" id="attemptLabel"></span>
+      </div>
+
+      <div id="loginAlert" class="alert hidden"></div>
+
+      <form id="loginForm" autocomplete="off" novalidate>
+
+        <!-- Username -->
+        <div>
+          <div class="form-label"><i class="fas fa-user"></i> Username</div>
+          <div class="input-wrap">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="username" class="form-input"
+              placeholder="Masukkan username admin"
+              autocomplete="username" required
+              maxlength="50" spellcheck="false">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <div class="form-label"><i class="fas fa-lock"></i> Password</div>
+          <div class="input-wrap">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" class="form-input"
+              placeholder="Masukkan password"
+              autocomplete="current-password" required
+              maxlength="100">
+            <button type="button" id="btnEye" class="btn-eye" tabindex="-1" aria-label="Tampilkan password">
+              <i class="fas fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Simple human-check (client-side, bukan Google reCAPTCHA) -->
+        <div class="captcha-box" id="captchaBox" onclick="toggleCaptcha()" role="checkbox" aria-checked="false" tabindex="0">
+          <div class="captcha-checkbox" id="captchaCheck"></div>
+          <span class="captcha-label">Saya bukan robot</span>
+          <i class="fas fa-shield-halved captcha-logo"></i>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn" disabled>
+          <i class="fas fa-sign-in-alt" id="btnIcon"></i>
+          <span id="btnText">Masuk ke Panel Admin</span>
+        </button>
+
+        <!-- Lockout countdown bar -->
+        <div class="lockout-bar" id="lockoutBar">
+          <div class="lockout-fill" id="lockoutFill"></div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ── Footer ── -->
+    <div class="login-footer">
+      <a href="/absensi/scan" class="footer-link">
+        <i class="fas fa-camera"></i> Buka Halaman Absensi Karyawan
+      </a>
+      <p class="footer-copy">© 2026 Desa Paraili — Kab. Mamuju Tengah. Semua hak dilindungi.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Konfigurasi keamanan client-side ──────────────────────────────────────────
+const MAX_ATTEMPTS   = 5;    // maks percobaan gagal sebelum lockout
+const LOCKOUT_SEC    = 60;   // detik lockout
+const THROTTLE_MS    = 1200; // jeda antar submit (anti-spam klik)
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let attempts       = 0;
+let isLockedOut    = false;
+let lastSubmitTime = 0;
+let captchaChecked = false;
+let lockoutTimer   = null;
+
+// ── DOM Refs ──────────────────────────────────────────────────────────────────
+const form       = document.getElementById('loginForm');
+const alertEl    = document.getElementById('loginAlert');
+const btn        = document.getElementById('loginBtn');
+const btnIcon    = document.getElementById('btnIcon');
+const btnText    = document.getElementById('btnText');
+const usernameEl = document.getElementById('username');
+const passwordEl = document.getElementById('password');
+
+// ── Restore lockout dari localStorage (bertahan antar refresh) ────────────────
+(function restoreLockout() {
+  const saved = localStorage.getItem('login_lockout');
+  if (!saved) return;
+  const { until, count } = JSON.parse(saved);
+  attempts = count || 0;
+  updateAttemptDots();
+  const remaining = Math.ceil((until - Date.now()) / 1000);
+  if (remaining > 0) startLockout(remaining, false);
+  else localStorage.removeItem('login_lockout');
+})();
+
+// ── Toggle password visibility ────────────────────────────────────────────────
+document.getElementById('btnEye').addEventListener('click', () => {
+  const show = passwordEl.type === 'password';
+  passwordEl.type = show ? 'text' : 'password';
+  document.getElementById('eyeIcon').className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+});
+
+// ── Captcha checkbox ──────────────────────────────────────────────────────────
+function toggleCaptcha() {
+  if (isLockedOut) return;
+  captchaChecked = !captchaChecked;
+  const box   = document.getElementById('captchaBox');
+  const check = document.getElementById('captchaCheck');
+  box.classList.toggle('checked', captchaChecked);
+  box.setAttribute('aria-checked', captchaChecked);
+  check.innerHTML = captchaChecked ? '<i class="fas fa-check" style="font-size:.75rem"></i>' : '';
+  updateBtnState();
+}
+
+// Keyboard support untuk captcha
+document.getElementById('captchaBox').addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleCaptcha(); }
+});
+
+// ── Aktifkan tombol saat form valid ───────────────────────────────────────────
+function updateBtnState() {
+  const ok = captchaChecked && usernameEl.value.trim() && passwordEl.value.trim() && !isLockedOut;
+  btn.disabled = !ok;
+}
+usernameEl.addEventListener('input', updateBtnState);
+passwordEl.addEventListener('input', updateBtnState);
+
+// ── Dots percobaan gagal ──────────────────────────────────────────────────────
+function updateAttemptDots() {
+  const bar = document.getElementById('attemptBar');
+  bar.style.display = attempts > 0 ? 'flex' : 'none';
+  for (let i = 1; i <= 5; i++) {
+    const dot = document.getElementById('d' + i);
+    dot.classList.toggle('used', i <= attempts);
+  }
+  const remaining = MAX_ATTEMPTS - attempts;
+  const label = document.getElementById('attemptLabel');
+  if (attempts > 0 && !isLockedOut) {
+    label.textContent = remaining > 0
+      ? `Sisa ${remaining} percobaan`
+      : '';
+  } else {
+    label.textContent = '';
+  }
+}
+
+// ── Sanitasi input (cegah XSS sederhana) ─────────────────────────────────────
+function sanitize(str) {
+  return String(str).replace(/[<>"'`]/g, '').trim().slice(0, 100);
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  // Throttle — cegah spam klik
+  const now = Date.now();
+  if (now - lastSubmitTime < THROTTLE_MS) return;
+  lastSubmitTime = now;
+
+  if (isLockedOut) return;
+  if (!captchaChecked) { showAlert('Centang "Saya bukan robot" terlebih dahulu.', 'warning'); return; }
+
+  const username = sanitize(usernameEl.value);
+  const password = sanitize(passwordEl.value);
+
+  if (!username || !password) {
+    showAlert('Username dan password wajib diisi.', 'danger'); return;
+  }
+  if (username.length < 3) {
+    showAlert('Username minimal 3 karakter.', 'danger'); return;
+  }
+
+  setLoading(true);
+  hideAlert();
+
+  try {
+    const res  = await fetch('/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'   // tandai request AJAX
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({ username, password })
+    });
+
+    // Handle non-JSON (misal 429 rate limit dari server)
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      if (res.status === 429) {
+        attempts = MAX_ATTEMPTS;
+        updateAttemptDots();
+        startLockout(LOCKOUT_SEC);
+        return;
+      }
+      throw new Error('Respons server tidak valid');
+    }
+
+    const json = await res.json();
+
+    if (json.success) {
+      // Reset semua state keamanan
+      attempts = 0;
+      localStorage.removeItem('login_lockout');
+      updateAttemptDots();
+
+      showAlert('Login berhasil! Mengalihkan…', 'success');
+      btn.disabled = true;
+      setTimeout(() => { window.location.href = json.redirect || '/dashboard'; }, 700);
+
+    } else {
+      attempts++;
+      updateAttemptDots();
+      saveLockoutState();
+
+      // Guncang input (feedback visual)
+      shakeForm();
+
+      // Reset captcha setiap gagal
+      captchaChecked = false;
+      document.getElementById('captchaBox').classList.remove('checked');
+      document.getElementById('captchaBox').setAttribute('aria-checked', 'false');
+      document.getElementById('captchaCheck').innerHTML = '';
+      updateBtnState();
+
+      if (attempts >= MAX_ATTEMPTS) {
+        startLockout(LOCKOUT_SEC);
+      } else {
+        const sisa = MAX_ATTEMPTS - attempts;
+        showAlert(`${json.message} — Sisa ${sisa} percobaan sebelum akun dikunci sementara.`, 'danger');
+        setLoading(false);
+        // Kosongkan password saja, biarkan username
+        passwordEl.value = '';
+        passwordEl.focus();
+      }
+    }
+  } catch (err) {
+    showAlert('Tidak dapat terhubung ke server. Coba lagi.', 'danger');
+    setLoading(false);
+  }
+});
+
+// ── Lockout ───────────────────────────────────────────────────────────────────
+function startLockout(seconds, save = true) {
+  isLockedOut = true;
+  btn.disabled = true;
+  usernameEl.disabled = true;
+  passwordEl.disabled = true;
+
+  if (save) {
+    saveLockoutState(seconds);
+  }
+
+  const bar  = document.getElementById('lockoutBar');
+  const fill = document.getElementById('lockoutFill');
+  bar.style.display  = 'block';
+  fill.style.width   = '100%';
+
+  let remaining = seconds;
+  showAlert(`Terlalu banyak percobaan gagal. Akses dikunci selama <strong>${remaining}</strong> detik.`, 'danger');
+
+  // Animasi bar mengecil
+  requestAnimationFrame(() => {
+    fill.style.transition = `width ${remaining}s linear`;
+    fill.style.width = '0%';
+  });
+
+  lockoutTimer = setInterval(() => {
+    remaining--;
+    showAlert(`Terlalu banyak percobaan gagal. Akses dikunci selama <strong>${remaining}</strong> detik.`, 'danger');
+    if (remaining <= 0) {
+      clearInterval(lockoutTimer);
+      endLockout();
+    }
+  }, 1000);
+}
+
+function endLockout() {
+  isLockedOut = false;
+  attempts    = 0;
+  usernameEl.disabled = false;
+  passwordEl.disabled = false;
+  document.getElementById('lockoutBar').style.display = 'none';
+  localStorage.removeItem('login_lockout');
+  updateAttemptDots();
+  hideAlert();
+  updateBtnState();
+  usernameEl.focus();
+}
+
+function saveLockoutState(extraSeconds = 0) {
+  const until = Date.now() + (extraSeconds * 1000);
+  localStorage.setItem('login_lockout', JSON.stringify({ until, count: attempts }));
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+function setLoading(on) {
+  btn.disabled = on;
+  btnIcon.className = on ? 'fas fa-spinner fa-spin' : 'fas fa-sign-in-alt';
+  btnText.textContent = on ? 'Memverifikasi…' : 'Masuk ke Panel Admin';
+}
+
+function showAlert(msg, type) {
+  alertEl.className = `alert alert-${type}`;
+  const icons = { danger:'exclamation-circle', success:'check-circle', warning:'triangle-exclamation' };
+  alertEl.innerHTML = `<i class="fas fa-${icons[type]||'info-circle'}"></i><span>${msg}</span>`;
+}
+function hideAlert() { alertEl.className = 'alert hidden'; }
+
+function shakeForm() {
+  const card = document.querySelector('.login-card');
+  card.style.animation = 'none';
+  card.style.transform = 'translateX(0)';
+  requestAnimationFrame(() => {
+    card.style.animation = 'shake .35s ease';
+  });
+}
+
+// ── Keyframe shake via style injection ────────────────────────────────────────
+const style = document.createElement('style');
+style.textContent = `
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%    {transform:translateX(-8px)}
+  40%    {transform:translateX(8px)}
+  60%    {transform:translateX(-6px)}
+  80%    {transform:translateX(6px)}
+}`;
+document.head.appendChild(style);
+
+// ── Cek sudah login ───────────────────────────────────────────────────────────
+fetch('/auth/me', { credentials: 'same-origin' })
+  .then(r => r.json())
+  .then(d => { if (d.success) window.location.href = '/dashboard'; })
+  .catch(() => {});
+</script>
+</body>
+</html>

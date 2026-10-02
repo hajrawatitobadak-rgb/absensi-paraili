@@ -1,0 +1,7 @@
+node_modules
+database/absensi.db
+database/absensi.db-shm
+database/absensi.db-wal
+public/images/karyawan
+public/images/absensi
+*.bat

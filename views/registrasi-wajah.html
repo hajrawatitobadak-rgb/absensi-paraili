@@ -1,0 +1,604 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrasi Wajah - Sistem Absensi</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <style>
+    /* ── Registrasi-specific styles ── */
+    .reg-container   { display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem; align-items: start; }
+    .karyawan-list   { max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: .35rem; }
+    .karyawan-item   {
+      display: flex; align-items: center; gap: .65rem; padding: .6rem .75rem;
+      border-radius: 8px; cursor: pointer; transition: all .2s; border: 1.5px solid transparent;
+    }
+    .karyawan-item:hover  { background: #eff6ff; border-color: #3b82f6; }
+    .karyawan-item.active { background: #dbeafe; border-color: #2563eb; }
+    .karyawan-item-info strong { display:block; font-size:.85rem; }
+    .karyawan-item-info small  { font-size:.75rem; color:#64748b; }
+
+    .selected-info {
+      display: flex; gap: 1rem; align-items: center; padding: .85rem;
+      background: #f8fafc; border-radius: 10px; margin-bottom: 1rem;
+    }
+    .selected-avatar img {
+      width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+      border: 3px solid #3b82f6;
+    }
+
+    /* ── Kamera ── */
+    .reg-camera-wrap {
+      position: relative; border-radius: 12px; overflow: hidden;
+      background: #000; box-shadow: 0 0 0 3px rgba(59,130,246,.3);
+    }
+    .reg-camera-wrap video  { width: 100%; display: block; max-height: 320px; object-fit: cover; }
+    .reg-overlay            { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+
+    /* deteksi wajah highlight */
+    .face-found   { outline: 3px solid #22c55e; outline-offset: 0; }
+    .face-notfound{ outline: 2px dashed rgba(255,255,255,.3); outline-offset: 0; }
+
+    /* ── Status badge ── */
+    .detect-status {
+      display: flex; align-items: center; gap: .5rem; padding: .55rem .85rem;
+      border-radius: 8px; font-size: .85rem; font-weight: 500;
+      background: #f8fafc; border: 1px solid #e2e8f0; margin-top: .6rem;
+    }
+    .detect-status .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink:0; }
+    .dot-loading { background: #f59e0b; animation: pulse 1s infinite; }
+    .dot-ready   { background: #3b82f6; }
+    .dot-found   { background: #22c55e; animation: pulse .6s infinite; }
+    .dot-error   { background: #ef4444; }
+
+    /* ── Progress ── */
+    .progress-wrap  { margin-top: .75rem; }
+    .progress-label { font-size: .82rem; font-weight:500; margin-bottom: .35rem; }
+    .progress-bar   { background: #e2e8f0; border-radius: 20px; height: 10px; overflow:hidden; }
+    .progress-fill  { background: linear-gradient(90deg,#3b82f6,#22c55e); height:100%; border-radius:20px; transition: width .3s; }
+
+    /* ── Sampel grid ── */
+    .sampel-grid { display: flex; gap: .45rem; flex-wrap: wrap; margin-top: .65rem; }
+    .sampel-slot {
+      width: 60px; height: 60px; border-radius: 8px; border: 2px dashed #cbd5e1;
+      display: flex; align-items: center; justify-content: center; overflow:hidden;
+      position: relative; background: #f8fafc;
+    }
+    .sampel-slot img   { width:100%; height:100%; object-fit:cover; }
+    .sampel-slot .num  {
+      position:absolute; top:-4px; right:-4px; background:#22c55e; color:#fff;
+      width:18px; height:18px; border-radius:50%; font-size:.65rem; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .sampel-slot.empty i { font-size:1.2rem; color:#cbd5e1; }
+
+    /* ── Controls ── */
+    .camera-controls { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .75rem; }
+
+    /* ── Auto-capture indicator ── */
+    .auto-capture-bar {
+      height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden;
+      margin-top: .5rem;
+    }
+    .auto-capture-fill {
+      height: 100%; background: #22c55e; border-radius: 3px;
+      width: 0%; transition: width .15s linear;
+    }
+
+    @media (max-width: 900px) {
+      .reg-container { grid-template-columns: 1fr; }
+      .karyawan-list { max-height: 200px; }
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><i class="fas fa-fingerprint"></i><span>Absensi Desa Paraili Kecamatan Topoyo</span></div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard"          class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+      <a href="/karyawan/daftar"    class="nav-item"><i class="fas fa-users"></i><span>Pegawai</span></a>
+      <a href="/karyawan/registrasi" class="nav-item active"><i class="fas fa-user-plus"></i><span>Registrasi Wajah</span></a>
+      <a href="/absensi/scan"       class="nav-item" target="_blank"><i class="fas fa-camera"></i><span>Halaman Absensi</span></a>
+      <a href="/laporan/absensi"    class="nav-item"><i class="fas fa-chart-bar"></i><span>Laporan</span></a>
+      <a href="/pengaturan"         class="nav-item"><i class="fas fa-cog"></i><span>Pengaturan</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i><span>Keluar</span></button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title"><h2>Registrasi Wajah Pegawai</h2></div>
+      <div class="topbar-user"><i class="fas fa-user-circle"></i><span id="namaUser">Admin</span></div>
+    </div>
+
+    <div class="content">
+      <div class="reg-container">
+
+        <!-- ── Panel Kiri: Daftar Karyawan ── -->
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-users"></i> Pilih Pegawai</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <input type="text" id="searchKaryawan" class="form-control" placeholder="🔍 Cari nama / NIP...">
+            </div>
+            <div id="listKaryawan" class="karyawan-list">
+              <div class="text-center text-muted">Memuat...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Panel Kanan: Kamera & Capture ── -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-camera"></i> Registrasi Wajah</h3>
+            <!-- Pilihan jumlah sampel -->
+            <div style="display:flex;align-items:center;gap:.5rem;font-size:.82rem">
+              <label style="font-weight:500">Sampel:</label>
+              <select id="selSampel" class="form-control form-control-sm" style="width:65px">
+                <option value="1">1</option>
+                <option value="3" selected>3</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <!-- Info karyawan terpilih -->
+            <div id="selectedInfo" class="selected-info hidden">
+              <div class="selected-avatar">
+                <img id="selectedFoto" src="/images/default-avatar.svg" alt="">
+              </div>
+              <div>
+                <h4 id="selectedNama" style="margin:0;font-size:1rem">-</h4>
+                <p id="selectedNip"  style="margin:0;font-size:.8rem;color:#64748b">-</p>
+                <p id="selectedJab"  style="margin:0;font-size:.8rem;color:#64748b">-</p>
+                <span id="selectedFaceStatus" class="badge badge-orange" style="margin-top:.3rem">Belum terdaftar</span>
+              </div>
+            </div>
+
+            <div id="noSelected" class="text-center text-muted py-3">
+              <i class="fas fa-arrow-left fa-2x mb-2"></i><br>
+              Pilih pegawai di panel kiri
+            </div>
+
+            <!-- Tombol mulai kamera -->
+            <div id="startArea" class="text-center hidden" style="margin-bottom:.75rem">
+              <button class="btn btn-primary" id="btnStartCamera">
+                <i class="fas fa-video"></i> Aktifkan Kamera & Mulai Registrasi
+              </button>
+              <p class="text-muted mt-2" style="font-size:.8rem">
+                Pencahayaan cukup &nbsp;·&nbsp; Hadap langsung ke kamera &nbsp;·&nbsp; Tidak perlu kacamata
+              </p>
+            </div>
+
+            <!-- Area kamera -->
+            <div id="cameraArea" class="hidden">
+              <div class="reg-camera-wrap" id="cameraWrap">
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="overlay" class="reg-overlay"></canvas>
+              </div>
+
+              <!-- Status deteksi -->
+              <div class="detect-status" id="detectStatus">
+                <div class="dot dot-loading" id="statusDot"></div>
+                <span id="statusText">Memuat model AI...</span>
+              </div>
+
+              <!-- Auto-capture progress bar -->
+              <div class="auto-capture-bar" id="autoCaptureBar" style="display:none">
+                <div class="auto-capture-fill" id="autoCaptureFill"></div>
+              </div>
+
+              <!-- Progress sampel -->
+              <div class="progress-wrap">
+                <div class="progress-label">
+                  Sampel terkumpul: <strong id="captureCount">0</strong> / <strong id="totalSampel">3</strong>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                </div>
+              </div>
+
+              <!-- Thumbnail sampel -->
+              <div class="sampel-grid" id="sampelGrid"></div>
+
+              <!-- Kontrol -->
+              <div class="camera-controls">
+                <button class="btn btn-secondary" id="btnStop">
+                  <i class="fas fa-stop"></i> Stop
+                </button>
+                <button class="btn btn-success" id="btnCapture" disabled>
+                  <i class="fas fa-camera"></i> Ambil Foto
+                </button>
+                <button class="btn btn-primary hidden" id="btnSimpan">
+                  <i class="fas fa-save"></i> Simpan Data Wajah
+                </button>
+                <button class="btn btn-warning hidden" id="btnUlang">
+                  <i class="fas fa-redo"></i> Ulang
+                </button>
+              </div>
+            </div>
+
+            <div id="regAlert" class="alert hidden mt-2"></div>
+          </div>
+        </div>
+
+      </div><!-- /reg-container -->
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    fetch('/auth/me').then(r=>r.json()).then(d=>{
+      if(!d.success) return window.location.href='/login';
+      document.getElementById('namaUser').textContent = d.user.username;
+    });
+    document.getElementById('sidebarToggle').addEventListener('click',()=>
+      document.getElementById('sidebar').classList.toggle('collapsed'));
+    document.getElementById('logoutBtn').addEventListener('click',async()=>{
+      await fetch('/auth/logout',{method:'POST'});
+      window.location.href='/login';
+    });
+
+    // ── Konstanta ─────────────────────────────────────────────────────────────
+    // Model dari CDN — ganti ke '/models' jika sudah download lokal
+    const MODEL_URL      = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+    const DETECT_INTERVAL = 200;   // ms
+    const INPUT_SIZE      = 224;   // px — sama dengan absensi agar descriptor konsisten
+    const AUTO_CAPTURE_MS = 1200;  // ms wajah harus stabil sebelum auto-capture
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let selectedId    = null;
+    let stream        = null;
+    let modelsLoaded  = false;
+    let capturedDesc  = [];
+    let detTimer      = null;
+    let allKaryawan   = [];
+    let autoTimer     = null;      // timer auto-capture
+    let autoStart     = null;      // timestamp saat wajah mulai terdeteksi terus-menerus
+    let TARGET_SAMPEL = 3;
+
+    // ── DOM refs ──────────────────────────────────────────────────────────────
+    const video       = document.getElementById('video');
+    const overlay     = document.getElementById('overlay');
+    const btnCapture  = document.getElementById('btnCapture');
+    const btnSimpan   = document.getElementById('btnSimpan');
+    const btnUlang    = document.getElementById('btnUlang');
+    const captureCount= document.getElementById('captureCount');
+    const progressFill= document.getElementById('progressFill');
+    const sampelGrid  = document.getElementById('sampelGrid');
+
+    document.getElementById('selSampel').addEventListener('change', function() {
+      TARGET_SAMPEL = parseInt(this.value);
+      document.getElementById('totalSampel').textContent = TARGET_SAMPEL;
+      resetSampel();
+      renderSampelSlots();
+    });
+
+    // ── Daftar karyawan ───────────────────────────────────────────────────────
+    async function loadKaryawan() {
+      const res  = await fetch('/karyawan/api/list');
+      const json = await res.json();
+      allKaryawan = json.data || [];
+      renderList(allKaryawan);
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('id')) pilihKaryawan(parseInt(params.get('id')));
+    }
+
+    function renderList(data) {
+      const el = document.getElementById('listKaryawan');
+      if (!data.length) { el.innerHTML='<div class="text-center text-muted">Tidak ada pegawai</div>'; return; }
+      el.innerHTML = data.map(k=>`
+        <div class="karyawan-item ${selectedId===k.id?'active':''}" onclick="pilihKaryawan(${k.id})">
+          <img src="${k.foto||'/images/default-avatar.svg'}" class="avatar-sm"
+               onerror="this.src='/images/default-avatar.svg'" alt="${k.nama}">
+          <div class="karyawan-item-info">
+            <strong>${k.nama}</strong>
+            <small>${k.nip} · ${k.departemen||'-'}</small>
+          </div>
+          ${k.face_descriptor
+            ? '<i class="fas fa-check-circle" style="color:#22c55e;flex-shrink:0" title="Terdaftar"></i>'
+            : '<i class="fas fa-exclamation-circle" style="color:#f97316;flex-shrink:0" title="Belum"></i>'}
+        </div>`).join('');
+    }
+
+    document.getElementById('searchKaryawan').addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      renderList(allKaryawan.filter(k =>
+        k.nama.toLowerCase().includes(q) || k.nip.toLowerCase().includes(q)
+      ));
+    });
+
+    function pilihKaryawan(id) {
+      selectedId = id;
+      const k    = allKaryawan.find(x=>x.id===id);
+      if (!k) return;
+      renderList(allKaryawan);
+
+      document.getElementById('noSelected').classList.add('hidden');
+      document.getElementById('selectedInfo').classList.remove('hidden');
+      document.getElementById('startArea').classList.remove('hidden');
+      document.getElementById('selectedFoto').src               = k.foto||'/images/default-avatar.svg';
+      document.getElementById('selectedNama').textContent       = k.nama;
+      document.getElementById('selectedNip').textContent        = k.nip;
+      document.getElementById('selectedJab').textContent        = k.jabatan||k.departemen||'-';
+      const badge = document.getElementById('selectedFaceStatus');
+      badge.className   = k.face_descriptor ? 'badge badge-green' : 'badge badge-orange';
+      badge.textContent = k.face_descriptor ? '✅ Sudah terdaftar' : '⚠️ Belum terdaftar';
+
+      stopCamera();
+      resetSampel();
+      renderSampelSlots();
+    }
+
+    // ── Sampel slots ──────────────────────────────────────────────────────────
+    function renderSampelSlots() {
+      sampelGrid.innerHTML = '';
+      for (let i = 0; i < TARGET_SAMPEL; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'sampel-slot empty';
+        slot.id = `slot_${i}`;
+        slot.innerHTML = '<i class="fas fa-camera"></i>';
+        sampelGrid.appendChild(slot);
+      }
+    }
+
+    function fillSlot(index, imgData) {
+      const slot = document.getElementById(`slot_${index}`);
+      if (!slot) return;
+      slot.className = 'sampel-slot';
+      slot.innerHTML = `<img src="${imgData}" alt=""><div class="num">${index+1}</div>`;
+    }
+
+    function resetSampel() {
+      capturedDesc = [];
+      updateProgress(0);
+      btnSimpan.classList.add('hidden');
+      btnUlang.classList.add('hidden');
+      btnCapture.disabled = false;
+      autoStart = null;
+      document.getElementById('autoCaptureBar').style.display = 'none';
+      document.getElementById('autoCaptureFill').style.width  = '0%';
+    }
+
+    function updateProgress(n) {
+      captureCount.textContent       = n;
+      progressFill.style.width       = `${(n/TARGET_SAMPEL)*100}%`;
+    }
+
+    // ── Load model ────────────────────────────────────────────────────────────
+    let modelsPromise = null;
+    async function ensureModels() {
+      if (modelsLoaded) return;
+      if (modelsPromise)   return modelsPromise;
+      setStatus('loading', 'Memuat model AI...');
+      modelsPromise = Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),  // wajib agar descriptor sama dengan saat absensi
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+      ]).then(()=>{ modelsLoaded=true; setStatus('ready','Siap — hadap kamera'); });
+      return modelsPromise;
+    }
+
+    function setStatus(type, msg) {
+      document.getElementById('statusText').textContent = msg;
+      const dot = document.getElementById('statusDot');
+      dot.className = { loading:'dot dot-loading', ready:'dot dot-ready',
+                        found:'dot dot-found', error:'dot dot-error' }[type] || 'dot dot-ready';
+    }
+
+    // ── Kamera ────────────────────────────────────────────────────────────────
+    document.getElementById('btnStartCamera').addEventListener('click', startCamera);
+
+    async function startCamera() {
+      if (!selectedId) return showAlert('Pilih pegawai terlebih dahulu', 'warning');
+      document.getElementById('startArea').classList.add('hidden');
+      document.getElementById('cameraArea').classList.remove('hidden');
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width:{ideal:640}, height:{ideal:480}, facingMode:'user' }
+        });
+        video.srcObject = stream;
+        await new Promise(r => video.onloadedmetadata = r);
+        overlay.width  = video.videoWidth;
+        overlay.height = video.videoHeight;
+
+        renderSampelSlots();
+        await ensureModels();
+        startDetection();
+      } catch(e) {
+        showAlert('Kamera tidak bisa dibuka: ' + e.message, 'danger');
+        document.getElementById('startArea').classList.remove('hidden');
+        document.getElementById('cameraArea').classList.add('hidden');
+      }
+    }
+
+    function stopCamera() {
+      if (detTimer) { clearInterval(detTimer); detTimer = null; }
+      if (stream)   { stream.getTracks().forEach(t=>t.stop()); stream = null; }
+      document.getElementById('cameraArea').classList.add('hidden');
+      document.getElementById('startArea').classList.remove('hidden');
+      autoStart = null;
+    }
+    document.getElementById('btnStop').addEventListener('click', stopCamera);
+
+    // ── Deteksi wajah ─────────────────────────────────────────────────────────
+    function startDetection() {
+      const opts = new faceapi.TinyFaceDetectorOptions({
+        inputSize: INPUT_SIZE, scoreThreshold: 0.35
+      });
+      const wrap = document.getElementById('cameraWrap');
+      let running = false;
+
+      detTimer = setInterval(async () => {
+        if (!modelsLoaded || video.paused || running) return;
+        running = true;
+        try {
+          const det = await faceapi
+            .detectSingleFace(video, opts)
+            .withFaceLandmarks()
+            .withFaceDescriptor(); // landmark wajib agar descriptor konsisten dengan absensi
+
+          const ctx = overlay.getContext('2d');
+          ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+          if (det) {
+            // Gambar kotak
+            const sx = overlay.width  / video.videoWidth;
+            const sy = overlay.height / video.videoHeight;
+            const b  = det.detection.box;
+            ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2.5;
+            ctx.strokeRect(b.x*sx, b.y*sy, b.width*sx, b.height*sy);
+
+            wrap.classList.add('face-found');
+            wrap.classList.remove('face-notfound');
+            setStatus('found', '✅ Wajah terdeteksi!');
+            btnCapture.disabled = (capturedDesc.length >= TARGET_SAMPEL);
+
+            // ── Auto-capture setelah wajah stabil AUTO_CAPTURE_MS ms ──
+            if (capturedDesc.length < TARGET_SAMPEL) {
+              if (!autoStart) {
+                autoStart = Date.now();
+                document.getElementById('autoCaptureBar').style.display = '';
+              }
+              const elapsed = Date.now() - autoStart;
+              const pct     = Math.min((elapsed / AUTO_CAPTURE_MS) * 100, 100);
+              document.getElementById('autoCaptureFill').style.width = pct + '%';
+
+              if (elapsed >= AUTO_CAPTURE_MS) {
+                autoStart = null;
+                document.getElementById('autoCaptureFill').style.width = '0%';
+                doCapture(det); // auto-capture
+              }
+            } else {
+              document.getElementById('autoCaptureBar').style.display = 'none';
+            }
+
+          } else {
+            wrap.classList.remove('face-found');
+            wrap.classList.add('face-notfound');
+            setStatus('ready', 'Arahkan wajah ke kamera...');
+            btnCapture.disabled = true;
+            autoStart = null;
+            document.getElementById('autoCaptureFill').style.width = '0%';
+          }
+        } finally {
+          running = false;
+        }
+      }, DETECT_INTERVAL);
+    }
+
+    // ── Capture (manual & auto) ───────────────────────────────────────────────
+    document.getElementById('btnCapture').addEventListener('click', async () => {
+      if (!modelsLoaded || capturedDesc.length >= TARGET_SAMPEL) return;
+      const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: INPUT_SIZE, scoreThreshold: 0.35 });
+      const det  = await faceapi
+        .detectSingleFace(video, opts)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      if (!det) return showAlert('Wajah tidak terdeteksi, coba lagi.', 'warning');
+      doCapture(det);
+    });
+
+    function doCapture(det) {
+      if (capturedDesc.length >= TARGET_SAMPEL) return;
+
+      // Snapshot
+      const c = document.createElement('canvas');
+      c.width = video.videoWidth; c.height = video.videoHeight;
+      c.getContext('2d').drawImage(video, 0, 0);
+      const img = c.toDataURL('image/jpeg', 0.75);
+
+      capturedDesc.push({ descriptor: Array.from(det.descriptor), foto: img });
+      const idx = capturedDesc.length - 1;
+      fillSlot(idx, img);
+      updateProgress(capturedDesc.length);
+      setStatus('found', `✅ Sampel ${capturedDesc.length}/${TARGET_SAMPEL} diambil`);
+
+      // Reset auto-capture bar untuk sampel berikutnya
+      autoStart = null;
+      document.getElementById('autoCaptureFill').style.width = '0%';
+
+      if (capturedDesc.length >= TARGET_SAMPEL) {
+        btnCapture.disabled = true;
+        btnSimpan.classList.remove('hidden');
+        btnUlang.classList.remove('hidden');
+        setStatus('ready', `🎉 ${TARGET_SAMPEL} sampel terkumpul! Klik Simpan.`);
+        document.getElementById('autoCaptureBar').style.display = 'none';
+      }
+    }
+
+    // Ulang
+    document.getElementById('btnUlang').addEventListener('click', () => {
+      resetSampel();
+      renderSampelSlots();
+      setStatus('ready', 'Siap ambil ulang...');
+    });
+
+    // ── Simpan ────────────────────────────────────────────────────────────────
+    document.getElementById('btnSimpan').addEventListener('click', async () => {
+      if (capturedDesc.length < 1) return showAlert('Ambil minimal 1 sampel', 'warning');
+
+      btnSimpan.disabled = true;
+      btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+      // Rata-rata descriptor dari semua sampel
+      const avg = capturedDesc[0].descriptor.map((_, i) =>
+        capturedDesc.reduce((s, d) => s + d.descriptor[i], 0) / capturedDesc.length
+      );
+      // Pilih foto tengah sebagai foto profil
+      const midFoto = capturedDesc[Math.floor(capturedDesc.length / 2)].foto;
+
+      try {
+        const res  = await fetch(`/karyawan/api/${selectedId}/face`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ descriptor: avg, foto_base64: midFoto })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          showAlert('✅ Data wajah berhasil disimpan!', 'success');
+          stopCamera();
+          await loadKaryawan();
+          const badge = document.getElementById('selectedFaceStatus');
+          badge.className   = 'badge badge-green';
+          badge.textContent = '✅ Sudah terdaftar';
+          resetSampel();
+          renderSampelSlots();
+        } else {
+          showAlert(json.message, 'danger');
+        }
+      } catch(e) {
+        showAlert('Gagal: ' + e.message, 'danger');
+      }
+
+      btnSimpan.disabled = false;
+      btnSimpan.innerHTML = '<i class="fas fa-save"></i> Simpan Data Wajah';
+    });
+
+    // ── Alert helper ──────────────────────────────────────────────────────────
+    function showAlert(msg, type) {
+      const el = document.getElementById('regAlert');
+      el.className   = `alert alert-${type}`;
+      el.textContent = msg;
+      setTimeout(() => el.className = 'alert hidden', 4000);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    document.getElementById('totalSampel').textContent = TARGET_SAMPEL;
+    loadKaryawan();
+
+    // Muat model di background saat halaman pertama dibuka agar tidak ada jeda saat kamera dinyalakan
+    setTimeout(() => ensureModels(), 500);
+  </script>
+</body>
+</html>

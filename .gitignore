@@ -1,0 +1,19 @@
+# Dependencies — jangan upload, Railway install sendiri
+node_modules/
+
+# Database lokal
+database/absensi.db
+database/absensi.db-shm
+database/absensi.db-wal
+
+# Foto upload karyawan & absensi
+public/images/karyawan/
+public/images/absensi/
+
+# Environment variables — RAHASIA, jangan upload!
+.env
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+*.log

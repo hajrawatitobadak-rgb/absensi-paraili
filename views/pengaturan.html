@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan - Sistem Absensi</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><i class="fas fa-fingerprint"></i><span>Absensi Desa Paraili Kecamatan Topoyo</span></div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+      <a href="/karyawan/daftar" class="nav-item"><i class="fas fa-users"></i><span>Pegawai</span></a>
+      <a href="/karyawan/registrasi" class="nav-item"><i class="fas fa-user-plus"></i><span>Registrasi Wajah</span></a>
+      <a href="/absensi/scan" class="nav-item" target="_blank"><i class="fas fa-camera"></i><span>Halaman Absensi</span></a>
+      <a href="/laporan/absensi" class="nav-item"><i class="fas fa-chart-bar"></i><span>Laporan</span></a>
+      <a href="/pengaturan" class="nav-item active"><i class="fas fa-cog"></i><span>Pengaturan</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i><span>Keluar</span></button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title"><h2>Pengaturan Sistem</h2></div>
+      <div class="topbar-user"><i class="fas fa-user-circle"></i><span id="namaUser">Admin</span></div>
+    </div>
+
+    <div class="content">
+      <div class="settings-grid">
+
+        <!-- Pengaturan Umum -->
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-building"></i> Informasi Instansi</h3></div>
+          <div class="card-body">
+            <form id="formUmum">
+              <div class="form-group">
+                <label>Nama Instansi</label>
+                <input type="text" id="nama_instansi" class="form-control" placeholder="Nama instansi">
+              </div>
+              <div class="form-group">
+                <label>Tahun Anggaran</label>
+                <input type="text" id="tahun_anggaran" class="form-control" placeholder="Contoh: 2024">
+              </div>
+              <div id="alertUmum" class="alert hidden"></div>
+              <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Jam Kerja -->
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-clock"></i> Jam Kerja</h3></div>
+          <div class="card-body">
+            <form id="formJamKerja">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Jam Masuk</label>
+                  <input type="time" id="jam_masuk" class="form-control" value="08:00">
+                </div>
+                <div class="form-group">
+                  <label>Jam Pulang</label>
+                  <input type="time" id="jam_pulang" class="form-control" value="17:00">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Toleransi Keterlambatan (menit)</label>
+                <input type="number" id="toleransi_menit" class="form-control" min="0" max="120" value="30">
+                <small class="text-muted">Karyawan masih dianggap tepat waktu jika datang dalam batas toleransi ini</small>
+              </div>
+              <div id="alertJam" class="alert hidden"></div>
+              <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Lokasi Kantor -->
+        <div class="card settings-full">
+          <div class="card-header">
+            <h3><i class="fas fa-map-marker-alt"></i> Lokasi Kantor</h3>
+          </div>
+          <div class="card-body">
+            <div class="lokasi-grid">
+              <div>
+                <form id="formLokasi">
+                  <div class="form-group">
+                    <label>Nama Lokasi</label>
+                    <input type="text" id="lokasiNama" class="form-control" placeholder="Misal: Kantor Sekda">
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Latitude</label>
+                      <input type="text" id="lokasiLat" class="form-control" placeholder="-6.2088">
+                    </div>
+                    <div class="form-group">
+                      <label>Longitude</label>
+                      <input type="text" id="lokasiLng" class="form-control" placeholder="106.8456">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Radius Absensi (meter)</label>
+                    <input type="number" id="lokasiRadius" class="form-control" min="10" max="1000" value="100">
+                    <small class="text-muted">Karyawan hanya bisa absen dalam radius ini dari koordinat kantor</small>
+                  </div>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" id="btnLokasiSaya">
+                      <i class="fas fa-crosshairs"></i> Gunakan Lokasi Saya
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fas fa-save"></i> Simpan Lokasi
+                    </button>
+                  </div>
+                  <div id="alertLokasi" class="alert hidden mt-2"></div>
+                </form>
+              </div>
+              <div class="map-preview" id="mapPreview">
+                <div class="map-placeholder">
+                  <i class="fas fa-map fa-3x text-muted"></i>
+                  <p class="text-muted">Peta lokasi kantor</p>
+                  <a id="linkBukaPeta" href="#" target="_blank" class="btn btn-sm btn-info hidden">
+                    <i class="fas fa-external-link-alt"></i> Buka di Google Maps
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ganti Password -->
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-key"></i> Ganti Password Admin</h3></div>
+          <div class="card-body">
+            <form id="formPassword">
+              <div class="form-group">
+                <label>Password Lama</label>
+                <input type="password" id="password_lama" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label>Password Baru</label>
+                <input type="password" id="password_baru" class="form-control" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label>Konfirmasi Password Baru</label>
+                <input type="password" id="password_konfirm" class="form-control" required>
+              </div>
+              <div id="alertPassword" class="alert hidden"></div>
+              <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Ganti Password</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/js/app.js"></script>
+  <script>
+    fetch('/auth/me').then(r => r.json()).then(d => {
+      if (!d.success) return window.location.href = '/login';
+      document.getElementById('namaUser').textContent = d.user.username;
+    });
+    document.getElementById('sidebarToggle').addEventListener('click', () =>
+      document.getElementById('sidebar').classList.toggle('collapsed'));
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+
+    // ─── Load pengaturan ───────────────────────────────────────────────
+    async function loadPengaturan() {
+      const res  = await fetch('/pengaturan/api/semua');
+      const json = await res.json();
+      if (!json.success) return;
+      const d = json.data;
+      if (d.nama_instansi)   document.getElementById('nama_instansi').value   = d.nama_instansi;
+      if (d.tahun_anggaran)  document.getElementById('tahun_anggaran').value  = d.tahun_anggaran;
+      if (d.jam_masuk)       document.getElementById('jam_masuk').value       = d.jam_masuk;
+      if (d.jam_pulang)      document.getElementById('jam_pulang').value      = d.jam_pulang;
+      if (d.toleransi_menit) document.getElementById('toleransi_menit').value = d.toleransi_menit;
+    }
+
+    async function loadLokasi() {
+      const res  = await fetch('/pengaturan/api/lokasi');
+      const json = await res.json();
+      if (!json.success || !json.data) return;
+      const l = json.data;
+      document.getElementById('lokasiNama').value   = l.nama;
+      document.getElementById('lokasiLat').value    = l.lat;
+      document.getElementById('lokasiLng').value    = l.lng;
+      document.getElementById('lokasiRadius').value = l.radius;
+      updateMapLink(l.lat, l.lng);
+    }
+
+    function updateMapLink(lat, lng) {
+      const link = document.getElementById('linkBukaPeta');
+      link.href  = `https://maps.google.com/?q=${lat},${lng}`;
+      link.classList.remove('hidden');
+    }
+
+    // ─── Form Umum ────────────────────────────────────────────────────
+    document.getElementById('formUmum').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const res = await fetch('/pengaturan/api/simpan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nama_instansi:  document.getElementById('nama_instansi').value,
+          tahun_anggaran: document.getElementById('tahun_anggaran').value
+        })
+      });
+      const json = await res.json();
+      showAlert('alertUmum', json.message, json.success ? 'success' : 'danger');
+    });
+
+    // ─── Form Jam Kerja ────────────────────────────────────────────────
+    document.getElementById('formJamKerja').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const res = await fetch('/pengaturan/api/simpan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jam_masuk:       document.getElementById('jam_masuk').value,
+          jam_pulang:      document.getElementById('jam_pulang').value,
+          toleransi_menit: document.getElementById('toleransi_menit').value
+        })
+      });
+      const json = await res.json();
+      showAlert('alertJam', json.message, json.success ? 'success' : 'danger');
+    });
+
+    // ─── Form Lokasi ───────────────────────────────────────────────────
+    document.getElementById('btnLokasiSaya').addEventListener('click', () => {
+      if (!navigator.geolocation) return showAlert('alertLokasi', 'Geolocation tidak didukung', 'danger');
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          document.getElementById('lokasiLat').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('lokasiLng').value = pos.coords.longitude.toFixed(6);
+          updateMapLink(pos.coords.latitude, pos.coords.longitude);
+          showAlert('alertLokasi', 'Koordinat berhasil diambil dari GPS', 'success');
+        },
+        err => showAlert('alertLokasi', 'Gagal mengambil lokasi: ' + err.message, 'danger')
+      );
+    });
+
+    document.getElementById('formLokasi').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const res = await fetch('/pengaturan/api/lokasi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nama:   document.getElementById('lokasiNama').value,
+          lat:    document.getElementById('lokasiLat').value,
+          lng:    document.getElementById('lokasiLng').value,
+          radius: document.getElementById('lokasiRadius').value
+        })
+      });
+      const json = await res.json();
+      showAlert('alertLokasi', json.message, json.success ? 'success' : 'danger');
+      if (json.success) updateMapLink(document.getElementById('lokasiLat').value, document.getElementById('lokasiLng').value);
+    });
+
+    // ─── Ganti Password ────────────────────────────────────────────────
+    document.getElementById('formPassword').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const baru    = document.getElementById('password_baru').value;
+      const konfirm = document.getElementById('password_konfirm').value;
+      if (baru !== konfirm) {
+        return showAlert('alertPassword', 'Password baru tidak cocok', 'danger');
+      }
+      const res  = await fetch('/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password_lama: document.getElementById('password_lama').value,
+          password_baru: baru
+        })
+      });
+      const json = await res.json();
+      showAlert('alertPassword', json.message, json.success ? 'success' : 'danger');
+      if (json.success) document.getElementById('formPassword').reset();
+    });
+
+    function showAlert(id, msg, type) {
+      const el = document.getElementById(id);
+      el.className   = `alert alert-${type}`;
+      el.textContent = msg;
+      setTimeout(() => el.className = 'alert hidden', 4000);
+    }
+
+    loadPengaturan();
+    loadLokasi();
+  </script>
+</body>
+</html>
