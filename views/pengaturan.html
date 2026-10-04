@@ -168,7 +168,35 @@
 
       </div>
     </div>
-  </div>
+
+    <!-- ── ZONA BERBAHAYA: Reset Database ── -->
+    <div class="card" style="border:2px solid #ef4444">
+      <div class="card-header" style="background:#fef2f2">
+        <h3 style="color:#991b1b"><i class="fas fa-exclamation-triangle"></i> Zona Berbahaya — Reset Database</h3>
+      </div>
+      <div class="card-body">
+        <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:8px;padding:.85rem 1rem;margin-bottom:1rem;font-size:.85rem;color:#991b1b">
+          <strong>⚠️ Peringatan:</strong> Tindakan ini akan menghapus <strong>SEMUA</strong> data pegawai dan
+          data absensi secara permanen. Pengaturan sistem dan akun admin <strong>tidak</strong> terhapus.
+          Tindakan ini <strong>tidak dapat dibatalkan</strong>.
+        </div>
+        <div style="margin-bottom:.85rem">
+          <label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:.4rem">
+            Ketik <strong style="color:#991b1b">HAPUS SEMUA DATA</strong> untuk mengkonfirmasi:
+          </label>
+          <input type="text" id="inputKonfirmReset" class="form-control"
+            placeholder="Ketik: HAPUS SEMUA DATA" autocomplete="off" style="max-width:360px">
+        </div>
+        <div id="alertReset" class="alert hidden"></div>
+        <button class="btn btn-danger" id="btnResetDB" disabled>
+          <i class="fas fa-database"></i> Reset Database Sekarang
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /settings-grid -->
+  </div><!-- /content -->
+  </div><!-- /main-content -->
 
   <div id="toast" class="toast hidden"></div>
   <script src="/js/app.js"></script>
@@ -306,6 +334,40 @@
       el.textContent = msg;
       setTimeout(() => el.className = 'alert hidden', 4000);
     }
+
+    // ─── Reset Database ────────────────────────────────────────────────
+    document.getElementById('inputKonfirmReset').addEventListener('input', function() {
+      document.getElementById('btnResetDB').disabled = (this.value !== 'HAPUS SEMUA DATA');
+    });
+
+    document.getElementById('btnResetDB').addEventListener('click', async () => {
+      const input = document.getElementById('inputKonfirmReset').value;
+      if (input !== 'HAPUS SEMUA DATA') return;
+
+      const btn = document.getElementById('btnResetDB');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+
+      const res  = await fetch('/api/reset-database', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ konfirmasi: 'HAPUS SEMUA DATA' })
+      });
+      const json = await res.json();
+
+      const alertEl = document.getElementById('alertReset');
+      if (json.success) {
+        alertEl.className   = 'alert alert-success';
+        alertEl.textContent = '✅ ' + json.message;
+        document.getElementById('inputKonfirmReset').value = '';
+        btn.innerHTML = '<i class="fas fa-database"></i> Reset Database Sekarang';
+      } else {
+        alertEl.className   = 'alert alert-danger';
+        alertEl.textContent = '❌ ' + json.message;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-database"></i> Reset Database Sekarang';
+      }
+    });
 
     loadPengaturan();
     loadLokasi();

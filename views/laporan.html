@@ -82,6 +82,9 @@
               <button class="btn btn-success btn-sm" onclick="exportCSV()">
                 <i class="fas fa-file-csv"></i> Export CSV
               </button>
+              <button class="btn btn-danger btn-sm" onclick="bukaModalHapusBulan()" title="Hapus semua data bulan ini">
+                <i class="fas fa-trash-alt"></i> Hapus Bulan Ini
+              </button>
             </div>
           </div>
           <div class="card-body">
@@ -93,10 +96,11 @@
                     <th>No</th><th>Tanggal</th><th>NIP</th><th>Nama</th>
                     <th>Departemen</th><th>Jam Masuk</th><th>Jam Pulang</th>
                     <th>Durasi Kerja</th><th>Status Jam</th><th>Status</th>
+                    <th>Hapus</th>
                   </tr>
                 </thead>
                 <tbody id="bodyBulanan">
-                  <tr><td colspan="10" class="text-center text-muted">Pilih periode dan klik Tampilkan</td></tr>
+                  <tr><td colspan="11" class="text-center text-muted">Pilih periode dan klik Tampilkan</td></tr>
                 </tbody>
               </table>
             </div>
@@ -324,6 +328,11 @@
           <td>${r.durasi_label||'-'}</td>
           <td>${jamBadge(r)}</td>
           <td><span class="badge ${r.status==='terlambat'?'badge-orange':'badge-green'}">${r.status||'-'}</span></td>
+          <td>
+            <button class="btn btn-sm btn-danger" onclick="hapusAbsensi(${r.id},'${r.nama}','${r.tanggal}')" title="Hapus data ini">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
         </tr>`).join('');
 
       // Summary
@@ -480,6 +489,62 @@
     }
 
     loadDepartemen();
+
+    // ── Hapus 1 baris absensi ─────────────────────────────────────────────────
+    async function hapusAbsensi(id, nama, tanggal) {
+      if (!confirm(`Hapus data absensi:\n${nama} — ${tanggal}\n\nTindakan ini permanen dan tidak bisa dibatalkan!`)) return;
+      const res  = await fetch(`/laporan/api/hapus/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      showToast(json.message, json.success ? 'success' : 'error');
+      if (json.success) loadBulanan();
+    }
+
+    // ── Hapus semua absensi bulan ini ─────────────────────────────────────────
+    function bukaModalHapusBulan() {
+      const bln = document.getElementById('blnBulanan').value;
+      const thn = document.getElementById('thnBulanan').value;
+      const bulanNamaArr = ['Januari','Februari','Maret','April','Mei','Juni',
+                            'Juli','Agustus','September','Oktober','November','Desember'];
+      const nmBulan = bulanNamaArr[parseInt(bln)-1];
+
+      if (!confirm(`⚠️ HAPUS SEMUA data absensi bulan:\n${nmBulan} ${thn}\n\nSemua record absensi bulan ini akan dihapus permanen.\nTindakan TIDAK BISA DIBATALKAN!\n\nLanjutkan?`)) return;
+
+      // Konfirmasi kedua
+      const ketik = prompt(`Untuk konfirmasi, ketik:\nHAPUS ${nmBulan.toUpperCase()} ${thn}`);
+      if (ketik !== `HAPUS ${nmBulan.toUpperCase()} ${thn}`) {
+        alert('Konfirmasi tidak sesuai. Penghapusan dibatalkan.');
+        return;
+      }
+
+      fetch('/laporan/api/hapus-bulan', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bulan: bln, tahun: thn })
+      }).then(r => r.json()).then(json => {
+        showToast(json.message, json.success ? 'success' : 'error');
+        if (json.success) {
+          // Reset tampilan
+          document.getElementById('bodyBulanan').innerHTML =
+            '<tr><td colspan="11" class="text-center text-muted">Data berhasil dihapus. Pilih periode lain.</td></tr>';
+          document.getElementById('summaryBulanan').classList.add('hidden');
+        }
+      });
+    }
+
+    function showToast(msg, type) {
+      let t = document.getElementById('toastLaporan');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toastLaporan';
+        t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;padding:.75rem 1.25rem;border-radius:10px;font-size:.875rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.2);max-width:360px;color:#fff';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.background = type === 'success' ? '#166534' : '#991b1b';
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 4000);
+    }
+
   </script>
 </body>
 </html>

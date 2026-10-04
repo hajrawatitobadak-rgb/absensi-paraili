@@ -212,3 +212,39 @@ router.get('/api/export-rekap-csv', requireAuth, async (req,res)=>{
 });
 
 module.exports = router;
+
+// ── DELETE /laporan/api/hapus/:id — hapus 1 baris absensi ────────────────────
+router.delete('/api/hapus/:id', requireAuth, async (req, res) => {
+  try {
+    const row = await db.get('SELECT * FROM absensi WHERE id = ?', [req.params.id]);
+    if (!row) return res.json({ success: false, message: 'Data tidak ditemukan' });
+    await db.run('DELETE FROM absensi WHERE id = ?', [req.params.id]);
+    res.json({ success: true, message: 'Data absensi berhasil dihapus' });
+  } catch(e) { res.json({ success: false, message: e.message }); }
+});
+
+// ── DELETE /laporan/api/hapus-bulan — hapus semua absensi bulan tertentu ─────
+router.delete('/api/hapus-bulan', requireAuth, async (req, res) => {
+  try {
+    const { bulan, tahun } = req.body;
+    if (!bulan || !tahun) return res.json({ success: false, message: 'Bulan dan tahun wajib diisi' });
+    const bln = String(bulan).padStart(2, '0');
+    const sql = db.isPG
+      ? `DELETE FROM absensi WHERE TO_CHAR(tanggal,'MM')=$1 AND TO_CHAR(tanggal,'YYYY')=$2`
+      : `DELETE FROM absensi WHERE strftime('%m',tanggal)=? AND strftime('%Y',tanggal)=?`;
+    const result = await db.run(sql, [bln, String(tahun)]);
+    res.json({ success: true, message: `Berhasil menghapus data absensi bulan ${bln}/${tahun}`, deleted: result.changes || 0 });
+  } catch(e) { res.json({ success: false, message: e.message }); }
+});
+
+// ── DELETE /laporan/api/reset-semua — hapus SEMUA data (absensi saja) ─────────
+router.delete('/api/reset-semua', requireAuth, async (req, res) => {
+  try {
+    const { konfirmasi } = req.body;
+    if (konfirmasi !== 'HAPUS SEMUA DATA') {
+      return res.json({ success: false, message: 'Konfirmasi tidak valid' });
+    }
+    await db.run('DELETE FROM absensi', []);
+    res.json({ success: true, message: 'Semua data absensi berhasil dihapus permanen' });
+  } catch(e) { res.json({ success: false, message: e.message }); }
+});

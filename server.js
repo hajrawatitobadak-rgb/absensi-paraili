@@ -156,6 +156,29 @@ app.use('/karyawan',   karyawanRoutes);
 app.use('/laporan',    laporanRoutes);
 app.use('/pengaturan', pengaturanRoutes);
 
+// ─── Reset Database — hapus semua data (butuh konfirmasi) ───────────────────
+app.post('/api/reset-database', requireAuth, async (req, res) => {
+  const { konfirmasi } = req.body;
+  if (konfirmasi !== 'HAPUS SEMUA DATA') {
+    return res.status(400).json({ success: false, message: 'Konfirmasi tidak valid' });
+  }
+  try {
+    const db = require('./database/db-adapter');
+    // Hapus semua data transaksi — urutan penting (FK constraint)
+    await db.run('DELETE FROM absensi',  []);
+    await db.run('DELETE FROM karyawan', []);
+    // Reset sequence ID jika PostgreSQL
+    if (db.isPG && db.pool) {
+      await db.pool.query('ALTER SEQUENCE IF EXISTS absensi_id_seq  RESTART WITH 1');
+      await db.pool.query('ALTER SEQUENCE IF EXISTS karyawan_id_seq RESTART WITH 1');
+    }
+    console.log('[ADMIN] Database di-reset oleh:', req.session?.user?.username);
+    res.json({ success: true, message: 'Semua data absensi dan pegawai berhasil dihapus. Database bersih.' });
+  } catch(e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 // ─── 11. Halaman HTML ────────────────────────────────────────────────────────
 const { requireAuth } = require('./middleware/auth');
 
