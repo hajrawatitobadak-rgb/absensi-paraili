@@ -7,22 +7,44 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ── Badge durasi jam ── */
+    .badge-cukup       { background:#d1fae5; color:#065f46; font-weight:600; }
+    .badge-kurang      { background:#fee2e2; color:#991b1b; font-weight:600; }
+    .badge-belum       { background:#fef3c7; color:#92400e; }
+    .badge-status-baik { background:#d1fae5; color:#065f46; }
+    .badge-status-ckp  { background:#fef3c7; color:#92400e; }
+    .badge-status-krg  { background:#fee2e2; color:#991b1b; }
+    /* ── Progress bar % kehadiran ── */
+    .persen-bar   { display:flex; align-items:center; gap:.5rem; min-width:120px; }
+    .persen-wrap  { flex:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; }
+    .persen-fill  { height:100%; border-radius:4px; transition:width .5s; }
+    .bg-green  { background:#22c55e; }
+    .bg-orange { background:#f97316; }
+    .bg-red    { background:#ef4444; }
+    /* ── Rekap summary cards ── */
+    .rekap-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:.75rem; margin-bottom:1.25rem; }
+    .rekap-stat  { background:#fff; border-radius:10px; padding:.85rem 1rem; box-shadow:0 1px 6px rgba(0,0,0,.07); text-align:center; }
+    .rekap-stat h3 { font-size:1.4rem; font-weight:700; margin:0; }
+    .rekap-stat p  { font-size:.72rem; color:#64748b; margin:.15rem 0 0; }
+    @media(max-width:768px){ .rekap-stats{grid-template-columns:repeat(3,1fr);} }
+  </style>
 </head>
 <body>
   <div class="sidebar" id="sidebar">
-        <div class="sidebar-logos">
+    <div class="sidebar-logos">
       <img src="/images/logo-kemendes.svg"      alt="Kemendes"      class="sb-logo">
       <img src="/images/logo-mamuju-tengah.svg" alt="Mamuju Tengah" class="sb-logo">
     </div>
     <div class="sidebar-brand"><i class="fas fa-fingerprint"></i><span>Absensi Desa Paraili</span></div>
     <nav class="sidebar-nav">
-      <a href="/dashboard" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-      <a href="/karyawan/daftar" class="nav-item"><i class="fas fa-users"></i><span>Pegawai</span></a>
+      <a href="/dashboard"           class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+      <a href="/karyawan/daftar"     class="nav-item"><i class="fas fa-users"></i><span>Pegawai</span></a>
       <a href="/karyawan/registrasi" class="nav-item"><i class="fas fa-user-plus"></i><span>Registrasi Wajah</span></a>
       <a href="/izin-cuti"           class="nav-item"><i class="fas fa-calendar-check"></i><span>Izin &amp; Cuti</span></a>
-      <a href="/absensi/scan" class="nav-item" target="_blank"><i class="fas fa-camera"></i><span>Halaman Absensi</span></a>
-      <a href="/laporan/absensi" class="nav-item active"><i class="fas fa-chart-bar"></i><span>Laporan</span></a>
-      <a href="/pengaturan" class="nav-item"><i class="fas fa-cog"></i><span>Pengaturan</span></a>
+      <a href="/absensi/scan"        class="nav-item" target="_blank"><i class="fas fa-camera"></i><span>Halaman Absensi</span></a>
+      <a href="/laporan/absensi"     class="nav-item active"><i class="fas fa-chart-bar"></i><span>Laporan</span></a>
+      <a href="/pengaturan"          class="nav-item"><i class="fas fa-cog"></i><span>Pengaturan</span></a>
     </nav>
     <div class="sidebar-footer">
       <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i><span>Keluar</span></button>
@@ -37,14 +59,13 @@
     </div>
 
     <div class="content">
-      <!-- Tab -->
       <div class="tab-bar">
         <button class="tab-btn active" onclick="switchTab('bulanan')"><i class="fas fa-calendar-alt"></i> Bulanan</button>
-        <button class="tab-btn" onclick="switchTab('rekap')"><i class="fas fa-users"></i> Rekap Pegawai</button>
+        <button class="tab-btn" onclick="switchTab('rekap')"><i class="fas fa-chart-pie"></i> Rekap Jam Kerja</button>
         <button class="tab-btn" onclick="switchTab('harian')"><i class="fas fa-calendar-day"></i> Per Hari</button>
       </div>
 
-      <!-- â•â•â• TAB BULANAN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+      <!-- ══ TAB BULANAN ══════════════════════════════════════════════════════ -->
       <div id="tabBulanan" class="tab-content active">
         <div class="card">
           <div class="card-header">
@@ -71,11 +92,11 @@
                   <tr>
                     <th>No</th><th>Tanggal</th><th>NIP</th><th>Nama</th>
                     <th>Departemen</th><th>Jam Masuk</th><th>Jam Pulang</th>
-                    <th>Status</th><th>Jarak</th>
+                    <th>Durasi Kerja</th><th>Status Jam</th><th>Status</th>
                   </tr>
                 </thead>
                 <tbody id="bodyBulanan">
-                  <tr><td colspan="9" class="text-center text-muted">Pilih periode dan klik Tampilkan</td></tr>
+                  <tr><td colspan="10" class="text-center text-muted">Pilih periode dan klik Tampilkan</td></tr>
                 </tbody>
               </table>
             </div>
@@ -84,35 +105,76 @@
         </div>
       </div>
 
-      <!-- â•â•â• TAB REKAP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+      <!-- ══ TAB REKAP JAM KERJA ═══════════════════════════════════════════════ -->
       <div id="tabRekap" class="tab-content hidden">
         <div class="card">
           <div class="card-header">
-            <h3><i class="fas fa-users"></i> Rekap Per Pegawai</h3>
+            <h3><i class="fas fa-chart-pie"></i> Rekap Jam Kerja Bulanan per Pegawai</h3>
             <div class="header-actions">
-              <input type="date" id="rekapDari" class="form-control form-control-sm">
-              <span>s/d</span>
-              <input type="date" id="rekapSampai" class="form-control form-control-sm">
+              <select id="blnRekap" class="form-control form-control-sm"></select>
+              <select id="thnRekap" class="form-control form-control-sm"></select>
               <select id="deptRekap" class="form-control form-control-sm">
                 <option value="">Semua Departemen</option>
               </select>
               <button class="btn btn-primary btn-sm" onclick="loadRekap()">
                 <i class="fas fa-search"></i> Tampilkan
               </button>
+              <button class="btn btn-success btn-sm" onclick="exportRekapCSV()">
+                <i class="fas fa-file-csv"></i> Export Rekap
+              </button>
             </div>
           </div>
           <div class="card-body">
+            <!-- Stats ringkasan rekap -->
+            <div class="rekap-stats" id="rekapStats" style="display:none">
+              <div class="rekap-stat">
+                <h3 id="rsHariKerja" style="color:#3b82f6">-</h3>
+                <p>Hari Kerja</p>
+              </div>
+              <div class="rekap-stat">
+                <h3 id="rsPegawai" style="color:#6366f1">-</h3>
+                <p>Total Pegawai</p>
+              </div>
+              <div class="rekap-stat">
+                <h3 id="rsRataPersen" style="color:#22c55e">-</h3>
+                <p>Rata-rata Kehadiran</p>
+              </div>
+              <div class="rekap-stat">
+                <h3 id="rsPegawaiKurang" style="color:#ef4444">-</h3>
+                <p>Pegawai Kurang Jam</p>
+              </div>
+              <div class="rekap-stat">
+                <h3 id="rsPegawaiBaik" style="color:#22c55e">-</h3>
+                <p>Pegawai Jam Cukup</p>
+              </div>
+            </div>
+
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:.65rem 1rem;margin-bottom:1rem;font-size:.8rem;color:#92400e">
+              <i class="fas fa-info-circle"></i>
+              <strong>Minimal jam kerja: 8 jam/hari</strong> — Kolom "Status Jam" menunjukkan apakah pegawai memenuhi minimal jam kerja harian.
+            </div>
+
             <div class="table-responsive">
               <table class="table table-hover">
                 <thead>
                   <tr>
-                    <th>No</th><th>NIP</th><th>Nama</th><th>Departemen</th>
-                    <th>Total Hadir</th><th>Terlambat</th><th>Sudah Pulang</th>
-                    <th>% Kehadiran</th>
+                    <th>No</th>
+                    <th>Nama Pegawai</th>
+                    <th>NIP</th>
+                    <th>Departemen</th>
+                    <th title="Jumlah hari masuk kerja">Hadir</th>
+                    <th title="Tidak masuk tanpa keterangan">Absen</th>
+                    <th title="Terlambat masuk">Terlambat</th>
+                    <th title="Total durasi kerja bulan ini">Total Jam Kerja</th>
+                    <th title="Hari dengan jam kerja ≥ 8 jam">Hari ≥8j</th>
+                    <th title="Hari dengan jam kerja < 8 jam">Hari &lt;8j</th>
+                    <th title="Total kekurangan jam kerja">Kurang Jam</th>
+                    <th title="Persentase kehadiran dari hari kerja">% Hadir</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody id="bodyRekap">
-                  <tr><td colspan="8" class="text-center text-muted">Pilih rentang tanggal dan klik Tampilkan</td></tr>
+                  <tr><td colspan="13" class="text-center text-muted">Pilih bulan dan klik Tampilkan</td></tr>
                 </tbody>
               </table>
             </div>
@@ -120,7 +182,7 @@
         </div>
       </div>
 
-      <!-- â•â•â• TAB HARIAN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+      <!-- ══ TAB HARIAN ════════════════════════════════════════════════════════ -->
       <div id="tabHarian" class="tab-content hidden">
         <div class="card">
           <div class="card-header">
@@ -139,11 +201,12 @@
                 <thead>
                   <tr>
                     <th>No</th><th>Foto</th><th>NIP</th><th>Nama</th>
-                    <th>Departemen</th><th>Jam Masuk</th><th>Jam Pulang</th><th>Status</th>
+                    <th>Departemen</th><th>Jam Masuk</th><th>Jam Pulang</th>
+                    <th>Durasi Kerja</th><th>Status Jam</th><th>Status</th>
                   </tr>
                 </thead>
                 <tbody id="bodyHarian">
-                  <tr><td colspan="8" class="text-center text-muted">Pilih tanggal dan klik Tampilkan</td></tr>
+                  <tr><td colspan="10" class="text-center text-muted">Pilih tanggal dan klik Tampilkan</td></tr>
                 </tbody>
               </table>
             </div>
@@ -156,241 +219,267 @@
 
   <script src="/js/app.js"></script>
   <script>
-    fetch('/auth/me').then(r => r.json()).then(d => {
-      if (!d.success) return window.location.href = '/login';
+    fetch('/auth/me').then(r=>r.json()).then(d=>{
+      if(!d.success) return window.location.href='/login';
       document.getElementById('namaUser').textContent = d.user.username;
     });
-    document.getElementById('sidebarToggle').addEventListener('click', () =>
+    document.getElementById('sidebarToggle').addEventListener('click',()=>
       document.getElementById('sidebar').classList.toggle('collapsed'));
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await fetch('/auth/logout', { method: 'POST' });
-      window.location.href = '/login';
+    document.getElementById('logoutBtn').addEventListener('click',async()=>{
+      await fetch('/auth/logout',{method:'POST'}); window.location.href='/login';
     });
 
-    // â”€â”€â”€ Isi select bulan & tahun â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Helper: format menit → "Xj Ym" ──────────────────────────────────────
+    function fmtDurasi(menit) {
+      if (!menit || menit <= 0) return '-';
+      const j = Math.floor(menit / 60);
+      const m = menit % 60;
+      return j > 0 ? `${j}j ${m}m` : `${m}m`;
+    }
+
+    // ── Helper: status jam badge ──────────────────────────────────────────────
+    function jamBadge(r) {
+      if (!r.jam_masuk) return '<span class="badge badge-red">Tidak Hadir</span>';
+      if (!r.jam_pulang) return '<span class="badge badge-belum">Belum Pulang</span>';
+      if (r.status_jam === 'cukup')
+        return `<span class="badge badge-cukup">✅ ${r.durasi_label}</span>`;
+      return `<span class="badge badge-kurang">⚠️ ${r.durasi_label} (kurang ${fmtDurasi(r.kurang_menit)})</span>`;
+    }
+
+    // ── Isi select bulan & tahun ──────────────────────────────────────────────
     const now = new Date();
     const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni',
                        'Juli','Agustus','September','Oktober','November','Desember'];
-    const selBln = document.getElementById('blnBulanan');
-    bulanNama.forEach((b, i) => {
-      const opt = document.createElement('option');
-      opt.value = String(i + 1).padStart(2, '0');
-      opt.textContent = b;
-      if (i === now.getMonth()) opt.selected = true;
-      selBln.appendChild(opt);
+
+    ['blnBulanan','blnRekap'].forEach(id => {
+      const sel = document.getElementById(id);
+      bulanNama.forEach((b,i)=>{
+        const o = document.createElement('option');
+        o.value = String(i+1).padStart(2,'0'); o.textContent = b;
+        if (i === now.getMonth()) o.selected = true;
+        sel.appendChild(o);
+      });
+    });
+    ['thnBulanan','thnRekap'].forEach(id => {
+      const sel = document.getElementById(id);
+      for (let y=now.getFullYear(); y>=now.getFullYear()-3; y--) {
+        const o = document.createElement('option');
+        o.value = y; o.textContent = y; sel.appendChild(o);
+      }
     });
 
-    const selThn = document.getElementById('thnBulanan');
-    for (let y = now.getFullYear(); y >= now.getFullYear() - 3; y--) {
-      const opt = document.createElement('option');
-      opt.value = y; opt.textContent = y;
-      selThn.appendChild(opt);
-    }
+    const pad = n => String(n).padStart(2,'0');
+    document.getElementById('tglHarian').value =
+      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
 
-    // Set default date
-    const pad = n => String(n).padStart(2, '0');
-    const firstDay = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
-    const lastDay  = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${new Date(now.getFullYear(), now.getMonth()+1, 0).getDate()}`;
-    document.getElementById('rekapDari').value   = firstDay;
-    document.getElementById('rekapSampai').value = lastDay;
-    document.getElementById('tglHarian').value   = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-
-    // â”€â”€â”€ Load departemen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Load departemen ───────────────────────────────────────────────────────
     async function loadDepartemen() {
       const res  = await fetch('/karyawan/api/departemen/list');
       const json = await res.json();
       ['deptBulanan','deptRekap'].forEach(id => {
         const sel = document.getElementById(id);
         sel.innerHTML = '<option value="">Semua Departemen</option>';
-        json.data.forEach(d => {
-          const opt = document.createElement('option');
-          opt.value = d; opt.textContent = d;
-          sel.appendChild(opt);
+        (json.data||[]).forEach(d => {
+          const o = document.createElement('option');
+          o.value=d; o.textContent=d; sel.appendChild(o);
         });
       });
     }
 
-    // â”€â”€â”€ Tab Switch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Tab Switch ────────────────────────────────────────────────────────────
     function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', ['bulanan','rekap','harian'][i] === tab);
+      document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+        b.classList.toggle('active',['bulanan','rekap','harian'][i]===tab);
       });
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));
       document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.remove('hidden');
     }
 
-    // â”€â”€â”€ Chart instance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let chartBulanan = null;
 
-    // â”€â”€â”€ Tab Bulanan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Tab Bulanan ───────────────────────────────────────────────────────────
     async function loadBulanan() {
       const bln  = document.getElementById('blnBulanan').value;
       const thn  = document.getElementById('thnBulanan').value;
       const dept = document.getElementById('deptBulanan').value;
-      const url  = `/laporan/api/bulanan?bulan=${bln}&tahun=${thn}${dept ? '&departemen='+dept : ''}`;
-      const res  = await fetch(url);
+      const res  = await fetch(`/laporan/api/bulanan?bulan=${bln}&tahun=${thn}${dept?'&departemen='+dept:''}`);
       const json = await res.json();
       const data = json.data || [];
       const tbody = document.getElementById('bodyBulanan');
 
       if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada data</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Tidak ada data</td></tr>';
         return;
       }
 
-      tbody.innerHTML = data.map((r, i) => `
+      tbody.innerHTML = data.map((r,i) => `
         <tr>
-          <td>${i + 1}</td>
+          <td>${i+1}</td>
           <td>${r.tanggal}</td>
           <td><code>${r.nip}</code></td>
           <td><strong>${r.nama}</strong></td>
-          <td>${r.departemen || '-'}</td>
-          <td>${r.jam_masuk || '<span class="text-muted">-</span>'}</td>
-          <td>${r.jam_pulang || '<span class="text-muted">-</span>'}</td>
-          <td><span class="badge ${r.status==='terlambat' ? 'badge-orange' : 'badge-green'}">${r.status}</span></td>
-          <td>${r.jarak_masuk ? r.jarak_masuk+'m' : '-'}</td>
-        </tr>
-      `).join('');
+          <td>${r.departemen||'-'}</td>
+          <td>${r.jam_masuk||'<span class="text-muted">-</span>'}</td>
+          <td>${r.jam_pulang||'<span class="text-muted">-</span>'}</td>
+          <td>${r.durasi_label||'-'}</td>
+          <td>${jamBadge(r)}</td>
+          <td><span class="badge ${r.status==='terlambat'?'badge-orange':'badge-green'}">${r.status||'-'}</span></td>
+        </tr>`).join('');
 
       // Summary
-      const hadir    = data.filter(r => r.jam_masuk).length;
-      const telat    = data.filter(r => r.status === 'terlambat').length;
-      const pulang   = data.filter(r => r.jam_pulang).length;
-      const summaryEl = document.getElementById('summaryBulanan');
-      summaryEl.classList.remove('hidden');
-      summaryEl.innerHTML = `
-        <div class="summary-item green"><strong>${hadir}</strong><span>Total Hadir</span></div>
+      const hadir  = data.filter(r=>r.jam_masuk).length;
+      const telat  = data.filter(r=>r.status==='terlambat').length;
+      const cukup  = data.filter(r=>r.status_jam==='cukup').length;
+      const kurang = data.filter(r=>r.status_jam==='kurang').length;
+      const sumEl  = document.getElementById('summaryBulanan');
+      sumEl.classList.remove('hidden');
+      sumEl.innerHTML = `
+        <div class="summary-item green"><strong>${hadir}</strong><span>Hadir</span></div>
         <div class="summary-item orange"><strong>${telat}</strong><span>Terlambat</span></div>
-        <div class="summary-item blue"><strong>${pulang}</strong><span>Sudah Pulang</span></div>
-        <div class="summary-item red"><strong>${data.length - hadir}</strong><span>Tidak Hadir</span></div>
-      `;
+        <div class="summary-item green"><strong>${cukup}</strong><span>Jam Cukup ≥8j</span></div>
+        <div class="summary-item red"><strong>${kurang}</strong><span>Jam Kurang &lt;8j</span></div>
+        <div class="summary-item red"><strong>${data.length-hadir}</strong><span>Tidak Hadir</span></div>`;
 
       // Grafik
       const dayMap = {};
-      data.forEach(r => {
-        if (!dayMap[r.tanggal]) dayMap[r.tanggal] = { hadir: 0, terlambat: 0 };
-        if (r.jam_masuk) dayMap[r.tanggal].hadir++;
-        if (r.status === 'terlambat') dayMap[r.tanggal].terlambat++;
+      data.forEach(r=>{
+        if(!dayMap[r.tanggal]) dayMap[r.tanggal]={hadir:0,terlambat:0};
+        if(r.jam_masuk) dayMap[r.tanggal].hadir++;
+        if(r.status==='terlambat') dayMap[r.tanggal].terlambat++;
       });
-      const labels  = Object.keys(dayMap).map(d => d.slice(8));
-      const hadirD  = Object.values(dayMap).map(v => v.hadir);
-      const telatD  = Object.values(dayMap).map(v => v.terlambat);
-
-      if (chartBulanan) chartBulanan.destroy();
-      const ctx = document.getElementById('grafikBulanan').getContext('2d');
-      chartBulanan = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            { label: 'Hadir', data: hadirD, backgroundColor: '#22c55e88', borderColor: '#22c55e', borderWidth: 2, borderRadius: 4 },
-            { label: 'Terlambat', data: telatD, backgroundColor: '#f9731688', borderColor: '#f97316', borderWidth: 2, borderRadius: 4 }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'top' } },
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
+      const labels = Object.keys(dayMap).map(d=>d.slice(8));
+      const hadirD = Object.values(dayMap).map(v=>v.hadir);
+      const telatD = Object.values(dayMap).map(v=>v.terlambat);
+      if(chartBulanan) chartBulanan.destroy();
+      chartBulanan = new Chart(document.getElementById('grafikBulanan').getContext('2d'),{
+        type:'bar',
+        data:{ labels,
+          datasets:[
+            {label:'Hadir',data:hadirD,backgroundColor:'#22c55e88',borderColor:'#22c55e',borderWidth:2,borderRadius:4},
+            {label:'Terlambat',data:telatD,backgroundColor:'#f9731688',borderColor:'#f97316',borderWidth:2,borderRadius:4}
+          ]},
+        options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}
       });
     }
 
     function exportCSV() {
-      const bln  = document.getElementById('blnBulanan').value;
-      const thn  = document.getElementById('thnBulanan').value;
-      const dept = document.getElementById('deptBulanan').value;
-      window.location.href = `/laporan/api/export-csv?bulan=${bln}&tahun=${thn}${dept ? '&departemen='+dept : ''}`;
+      const bln=document.getElementById('blnBulanan').value;
+      const thn=document.getElementById('thnBulanan').value;
+      const dept=document.getElementById('deptBulanan').value;
+      window.location.href=`/laporan/api/export-csv?bulan=${bln}&tahun=${thn}${dept?'&departemen='+dept:''}`;
     }
 
-    // â”€â”€â”€ Tab Rekap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Tab Rekap Jam Kerja ───────────────────────────────────────────────────
     async function loadRekap() {
-      const dari   = document.getElementById('rekapDari').value;
-      const sampai = document.getElementById('rekapSampai').value;
-      const dept   = document.getElementById('deptRekap').value;
-      const url    = `/laporan/api/rekap?dari=${dari}&sampai=${sampai}${dept ? '&departemen='+dept : ''}`;
-      const res    = await fetch(url);
-      const json   = await res.json();
-      const data   = json.data || [];
-      const tbody  = document.getElementById('bodyRekap');
+      const bln  = document.getElementById('blnRekap').value;
+      const thn  = document.getElementById('thnRekap').value;
+      const dept = document.getElementById('deptRekap').value;
+      const dari   = `${thn}-${bln}-01`;
+      const daysInMonth = new Date(parseInt(thn), parseInt(bln), 0).getDate();
+      const sampai = `${thn}-${bln}-${String(daysInMonth).padStart(2,'0')}`;
 
-      // Hitung total hari kerja
-      const d1 = new Date(dari), d2 = new Date(sampai);
-      let hariKerja = 0;
-      for (let d = new Date(d1); d <= d2; d.setDate(d.getDate() + 1)) {
-        if (d.getDay() !== 0 && d.getDay() !== 6) hariKerja++;
-      }
+      const res  = await fetch(`/laporan/api/rekap?dari=${dari}&sampai=${sampai}${dept?'&departemen='+dept:''}`);
+      const json = await res.json();
+      const data = json.data || [];
+      const hariKerja = json.hari_kerja || 0;
+      const tbody = document.getElementById('bodyRekap');
 
       if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Tidak ada data</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="text-center text-muted">Tidak ada data</td></tr>';
+        document.getElementById('rekapStats').style.display='none';
         return;
       }
 
-      tbody.innerHTML = data.map((k, i) => {
-        const persen = hariKerja > 0 ? Math.round((k.total_hadir / hariKerja) * 100) : 0;
-        const barColor = persen >= 80 ? 'green' : persen >= 60 ? 'orange' : 'red';
-        return `
-          <tr>
-            <td>${i + 1}</td>
-            <td><code>${k.nip}</code></td>
-            <td><strong>${k.nama}</strong></td>
-            <td>${k.departemen || '-'}</td>
-            <td><span class="badge badge-green">${k.total_hadir}</span></td>
-            <td><span class="badge ${k.total_terlambat > 0 ? 'badge-orange' : 'badge-green'}">${k.total_terlambat}</span></td>
-            <td>${k.total_pulang}</td>
-            <td>
-              <div class="persen-bar">
-                <div class="persen-fill bg-${barColor}" style="width:${persen}%"></div>
-                <span>${persen}%</span>
-              </div>
-            </td>
-          </tr>
-        `;
+      // Hitung summary
+      const totalPegawai = data.length;
+      const rataPersen   = Math.round(data.reduce((s,k)=>s+k.persen_hadir,0)/totalPegawai);
+      const pegawaiKurang= data.filter(k=>k.hari_kurang>0||k.kurang_total_menit>0).length;
+      const pegawaiBaik  = data.filter(k=>k.hari_cukup===k.total_pulang&&k.hari_kurang===0).length;
+
+      // Tampilkan stats
+      const rsEl = document.getElementById('rekapStats');
+      rsEl.style.display = 'grid';
+      document.getElementById('rsHariKerja').textContent   = hariKerja + ' hari';
+      document.getElementById('rsPegawai').textContent     = totalPegawai + ' orang';
+      document.getElementById('rsRataPersen').textContent  = rataPersen + '%';
+      document.getElementById('rsPegawaiKurang').textContent = pegawaiKurang + ' orang';
+      document.getElementById('rsPegawaiBaik').textContent   = pegawaiBaik + ' orang';
+
+      tbody.innerHTML = data.map((k,i)=>{
+        const barCls = k.persen_hadir>=90?'bg-green':k.persen_hadir>=75?'bg-orange':'bg-red';
+        const statusCls = k.status_kehadiran==='baik'?'badge-status-baik':k.status_kehadiran==='cukup'?'badge-status-ckp':'badge-status-krg';
+        const statusTxt = k.status_kehadiran==='baik'?'Baik':k.status_kehadiran==='cukup'?'Cukup':'Kurang';
+        return `<tr>
+          <td>${i+1}</td>
+          <td><strong>${k.nama}</strong></td>
+          <td><code>${k.nip}</code></td>
+          <td>${k.departemen||'-'}</td>
+          <td><span class="badge badge-green">${k.total_hadir}</span></td>
+          <td><span class="badge ${k.total_absen>0?'badge-red':'badge-green'}">${k.total_absen}</span></td>
+          <td><span class="badge ${k.total_terlambat>0?'badge-orange':'badge-green'}">${k.total_terlambat}</span></td>
+          <td><strong>${k.total_durasi_label}</strong></td>
+          <td><span class="badge badge-cukup">${k.hari_cukup} hari</span></td>
+          <td>${k.hari_kurang>0?`<span class="badge badge-kurang">${k.hari_kurang} hari</span>`:'<span class="badge badge-green">0</span>'}</td>
+          <td>${k.kurang_total_menit>0?`<span class="badge badge-kurang">${k.kurang_total_label}</span>`:'<span class="badge badge-cukup">-</span>'}</td>
+          <td>
+            <div class="persen-bar">
+              <div class="persen-wrap"><div class="persen-fill ${barCls}" style="width:${k.persen_hadir}%"></div></div>
+              <span style="font-size:.78rem;font-weight:600">${k.persen_hadir}%</span>
+            </div>
+          </td>
+          <td><span class="badge ${statusCls}">${statusTxt}</span></td>
+        </tr>`;
       }).join('');
     }
 
-    // â”€â”€â”€ Tab Harian â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    function exportRekapCSV() {
+      const bln  = document.getElementById('blnRekap').value;
+      const thn  = document.getElementById('thnRekap').value;
+      const dept = document.getElementById('deptRekap').value;
+      window.location.href = `/laporan/api/export-rekap-csv?bulan=${bln}&tahun=${thn}${dept?'&departemen='+dept:''}`;
+    }
+
+    // ── Tab Harian ────────────────────────────────────────────────────────────
     async function loadHarian() {
       const tgl  = document.getElementById('tglHarian').value;
       const res  = await fetch(`/laporan/api/harian/${tgl}`);
       const json = await res.json();
       const data = json.data || [];
-      const tbody = document.getElementById('bodyHarian');
+      const tbody= document.getElementById('bodyHarian');
 
-      const hadir   = data.filter(r => r.jam_masuk).length;
-      const absen   = data.filter(r => !r.jam_masuk).length;
-      const telat   = data.filter(r => r.status === 'terlambat').length;
+      const hadir = data.filter(r=>r.jam_masuk).length;
+      const absen = data.filter(r=>!r.jam_masuk).length;
+      const telat = data.filter(r=>r.status==='terlambat').length;
+      const cukup = data.filter(r=>r.status_jam==='cukup').length;
 
-      document.getElementById('statsMini').innerHTML = `
+      document.getElementById('statsMini').innerHTML=`
         <div class="mini-stat green"><strong>${hadir}</strong> Hadir</div>
         <div class="mini-stat red"><strong>${absen}</strong> Tidak Hadir</div>
         <div class="mini-stat orange"><strong>${telat}</strong> Terlambat</div>
-        <div class="mini-stat blue"><strong>${data.length}</strong> Total Pegawai</div>
-      `;
+        <div class="mini-stat green"><strong>${cukup}</strong> Jam Cukup</div>
+        <div class="mini-stat blue"><strong>${data.length}</strong> Total Pegawai</div>`;
 
       if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Tidak ada data</td></tr>';
+        tbody.innerHTML='<tr><td colspan="10" class="text-center text-muted">Tidak ada data</td></tr>';
         return;
       }
 
-      tbody.innerHTML = data.map((r, i) => `
-        <tr class="${!r.jam_masuk ? 'row-absen' : ''}">
-          <td>${i + 1}</td>
+      tbody.innerHTML = data.map((r,i)=>`
+        <tr class="${!r.jam_masuk?'row-absen':''}">
+          <td>${i+1}</td>
           <td><img src="${r.foto||'/images/default-avatar.svg'}" class="avatar-sm" onerror="this.src='/images/default-avatar.svg'" alt="${r.nama}"></td>
           <td><code>${r.nip}</code></td>
           <td><strong>${r.nama}</strong></td>
-          <td>${r.departemen || '-'}</td>
-          <td>${r.jam_masuk || '<span class="badge badge-red">Tidak Hadir</span>'}</td>
-          <td>${r.jam_pulang || '<span class="text-muted">-</span>'}</td>
-          <td>${r.jam_masuk
-            ? `<span class="badge ${r.status==='terlambat' ? 'badge-orange' : 'badge-green'}">${r.status}</span>`
-            : '<span class="badge badge-red">Absen</span>'}</td>
-        </tr>
-      `).join('');
+          <td>${r.departemen||'-'}</td>
+          <td>${r.jam_masuk||'<span class="badge badge-red">Tidak Hadir</span>'}</td>
+          <td>${r.jam_pulang||'<span class="text-muted">-</span>'}</td>
+          <td>${r.durasi_label||'-'}</td>
+          <td>${jamBadge(r)}</td>
+          <td>${r.jam_masuk?`<span class="badge ${r.status==='terlambat'?'badge-orange':'badge-green'}">${r.status}</span>`:'<span class="badge badge-red">Absen</span>'}</td>
+        </tr>`).join('');
     }
 
     loadDepartemen();
   </script>
 </body>
 </html>
-
-
