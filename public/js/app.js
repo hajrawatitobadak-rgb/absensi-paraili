@@ -25,10 +25,25 @@ window.formatTanggal = function(dateStr) {
   return new Date(dateStr).toLocaleDateString('id-ID', opts);
 };
 
-// ─── Format waktu ────────────────────────────────────────────────
+// ─── Format waktu 24 jam → "HH.mm" ─────────────────────────────
+// Input: "08:30:00" atau "08:30" dari database
+// Output: "08.30" (format 24 jam dengan titik)
 window.formatJam = function(timeStr) {
-  if (!timeStr) return '-';
-  return timeStr.substring(0, 5); // HH:MM
+  if (!timeStr || timeStr === '-') return '-';
+  // Ambil jam dan menit saja, ganti : dengan .
+  const parts = String(timeStr).trim().split(':');
+  if (parts.length < 2) return timeStr;
+  return `${parts[0].padStart(2,'0')}.${parts[1].padStart(2,'0')}`;
+};
+
+// Format lengkap dengan detik: "08.30.00"
+window.formatJamDetik = function(timeStr) {
+  if (!timeStr || timeStr === '-') return '-';
+  const parts = String(timeStr).trim().split(':');
+  const h = (parts[0]||'00').padStart(2,'0');
+  const m = (parts[1]||'00').padStart(2,'0');
+  const s = (parts[2]||'00').padStart(2,'0');
+  return `${h}.${m}.${s}`;
 };
 
 // ─── Konfirmasi hapus ────────────────────────────────────────────

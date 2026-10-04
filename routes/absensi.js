@@ -61,6 +61,22 @@ router.post('/api/pulang', async (req,res)=>{
     const jarak=lok?hitungJarak(+lat,+lng,lok.lat,lok.lng):0;
     if(lok&&jarak>lok.radius) return res.json({success:false,message:`Anda ${jarak}m dari kantor. Maks ${lok.radius}m`,jarak});
     const tanggal=moment().format('YYYY-MM-DD'),jam=moment().format('HH:mm:ss');
+
+    // ── Validasi: belum waktunya pulang ──────────────────────────────────────
+    const jamPulangRow = await db.get("SELECT nilai FROM pengaturan WHERE kunci='jam_pulang'");
+    const jamPulang    = jamPulangRow?.nilai || '17:00';
+    const [jp_h, jp_m] = jamPulang.split(':').map(Number);
+    const now          = new Date();
+    const menitSekarang= now.getHours() * 60 + now.getMinutes();
+    const menitPulang  = jp_h * 60 + jp_m;
+    if (menitSekarang < menitPulang) {
+      return res.json({
+        success: false,
+        message: `Belum waktunya pulang. Absen pulang dibuka pukul ${jamPulang} WIB.`,
+        jamPulang
+      });
+    }
+
     const ex=await db.get('SELECT * FROM absensi WHERE karyawan_id=? AND tanggal=?',[karyawan_id,tanggal]);
     if(!ex?.jam_masuk) return res.json({success:false,message:'Belum absen masuk hari ini'});
     if(ex?.jam_pulang)  return res.json({success:false,message:`Sudah absen pulang pukul ${ex.jam_pulang}`});

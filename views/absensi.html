@@ -42,14 +42,21 @@
   </header>
 
   <main class="absensi-main">
+    <!-- Banner otomatis saat jam pulang tiba -->
+    <div id="bannerPulang">
+      <i class="fas fa-door-open"></i>
+      🎉 Sudah waktunya pulang! Silakan lakukan <strong>Absen Pulang</strong>
+    </div>
 
     <!-- MODE SELECTOR -->
     <div class="mode-selector" id="modeSelector">
       <button class="mode-btn active" id="btnModeMasuk" onclick="setMode('masuk')">
         <i class="fas fa-sign-in-alt"></i><span>Absen Masuk</span>
       </button>
-      <button class="mode-btn" id="btnModePulang" onclick="setMode('pulang')">
-        <i class="fas fa-sign-out-alt"></i><span>Absen Pulang</span>
+      <button class="mode-btn" id="btnModePulang" onclick="setMode('pulang')" disabled>
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Absen Pulang</span>
+        <small id="pulangInfo" style="display:block;font-size:.65rem;opacity:.8;margin-top:.1rem"></small>
       </button>
     </div>
 
@@ -204,6 +211,40 @@
   <div id="toast" class="toast hidden"></div>
 
   <style>
+    /* ── Tombol Pulang terkunci ── */
+    .mode-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .mode-btn.locked {
+      opacity: .45;
+      cursor: not-allowed;
+      position: relative;
+    }
+    .mode-btn.locked::after {
+      content: '🔒';
+      font-size: .75rem;
+      position: absolute;
+      top: .25rem;
+      right: .35rem;
+    }
+    /* Notif banner waktu pulang */
+    #bannerPulang {
+      display: none;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      text-align: center;
+      padding: .55rem 1rem;
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: .3px;
+      animation: slideDown .4s ease;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
     /* ── Tombol Kamera Absen ── */
     .btn-capture-face {
       display: flex; flex-direction: column; align-items: center; gap: .5rem;
@@ -283,6 +324,80 @@
     }
     updateClock(); setInterval(updateClock, 1000);
 
+    // ── Kontrol jam pulang ────────────────────────────────────────────────────
+    let jamPulangMenit = null;   // jam pulang dalam menit dari tengah malam
+    let sudahUnlock    = false;  // flag agar notif hanya muncul sekali
+
+    // Konversi "HH:MM" → total menit
+    function toMenit(hhmm) {
+      const [h, m] = String(hhmm).split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    // Cek apakah sekarang sudah >= jam pulang
+    function cekWaktuPulang() {
+      if (jamPulangMenit === null) return;
+      const now  = new Date();
+      const menit = now.getHours() * 60 + now.getMinutes();
+      const btnPulang  = document.getElementById('btnModePulang');
+      const infoEl     = document.getElementById('pulangInfo');
+
+      if (menit >= jamPulangMenit) {
+        // ── BUKA tombol pulang ──
+        if (btnPulang.disabled) {
+          btnPulang.disabled = false;
+          btnPulang.classList.remove('locked');
+          infoEl.textContent = '';
+
+          if (!sudahUnlock) {
+            sudahUnlock = true;
+            // Tampilkan banner
+            const banner = document.getElementById('bannerPulang');
+            banner.style.display = 'block';
+            // Otomatis switch ke mode pulang
+            setMode('pulang');
+            // Sembunyikan banner setelah 8 detik
+            setTimeout(() => { banner.style.display = 'none'; }, 8000);
+          }
+        }
+      } else {
+        // ── KUNCI tombol pulang ──
+        btnPulang.disabled = true;
+        btnPulang.classList.add('locked');
+        // Hitung sisa waktu
+        const sisaMenit = jamPulangMenit - menit;
+        const sisaJam   = Math.floor(sisaMenit / 60);
+        const sisaMin   = sisaMenit % 60;
+        const h = String(Math.floor(jamPulangMenit / 60)).padStart(2, '0');
+        const m = String(jamPulangMenit % 60).padStart(2, '0');
+        if (sisaJam > 0) {
+          infoEl.textContent = `Buka pukul ${h}:${m} (${sisaJam}j ${sisaMin}m lagi)`;
+        } else {
+          infoEl.textContent = `Buka pukul ${h}:${m} (${sisaMin} mnt lagi)`;
+        }
+      }
+    }
+
+    // Ambil jam pulang dari pengaturan, lalu mulai cek tiap menit
+    async function initWaktuPulang() {
+      try {
+        const res  = await fetch('/pengaturan/api/semua');
+        const json = await res.json();
+        if (json.success && json.data.jam_pulang) {
+          jamPulangMenit = toMenit(json.data.jam_pulang);
+        } else {
+          // Default 17:00 jika tidak ada setting
+          jamPulangMenit = 17 * 60;
+        }
+      } catch(e) {
+        jamPulangMenit = 17 * 60; // fallback
+      }
+      cekWaktuPulang();                        // langsung cek saat load
+      setInterval(cekWaktuPulang, 30 * 1000);  // cek tiap 30 detik
+    }
+
+    initWaktuPulang();
+
     // ── Konstanta ─────────────────────────────────────────────────────────────
     const MODEL_URL       = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
     const DETECT_INTERVAL = 200;   // ms
@@ -335,6 +450,8 @@
 
     // ── Mode ──────────────────────────────────────────────────────────────────
     function setMode(mode) {
+      // Cegah pindah ke mode pulang jika tombol masih terkunci
+      if (mode === 'pulang' && document.getElementById('btnModePulang').disabled) return;
       currentMode = mode;
       document.getElementById('btnModeMasuk').classList.toggle('active', mode === 'masuk');
       document.getElementById('btnModePulang').classList.toggle('active', mode === 'pulang');

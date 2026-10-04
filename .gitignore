@@ -17,3 +17,5 @@ public/images/absensi/
 .DS_Store
 Thumbs.db
 *.log
+
+node/
