@@ -57,7 +57,8 @@ if (USE_PG) {
         await c.query('INSERT INTO lokasi_kantor(nama,lat,lng,radius,aktif) VALUES($1,$2,$3,$4,1)',
           ['Kantor Desa Paraili', -2.5489, 119.3248, 200]);
       }
-      for (const [k,v] of [['jam_masuk','08:00'],['jam_pulang','17:00'],
+      for (const [k,v] of [['jam_masuk','08:00'],['jam_pulang','16:00'],
+            ['jam_tutup_pulang','21:00'],
             ['toleransi_menit','30'],['nama_instansi','Desa Paraili'],
             ['tahun_anggaran', String(new Date().getFullYear())]]) {
         await c.query('INSERT INTO pengaturan(kunci,nilai) VALUES($1,$2) ON CONFLICT(kunci) DO NOTHING',[k,v]);
@@ -109,7 +110,7 @@ if (USE_PG) {
   if (!sqlite.prepare('SELECT id FROM lokasi_kantor WHERE aktif=1').get()) {
     sqlite.prepare('INSERT INTO lokasi_kantor(nama,lat,lng,radius,aktif) VALUES(?,?,?,?,1)').run('Kantor Desa Paraili',-2.5489,119.3248,200);
   }
-  for (const [k,v] of [['jam_masuk','08:00'],['jam_pulang','17:00'],['toleransi_menit','30'],
+  for (const [k,v] of [['jam_masuk','08:00'],['jam_pulang','16:00'],['jam_tutup_pulang','21:00'],['toleransi_menit','30'],
         ['nama_instansi','Desa Paraili'],['tahun_anggaran',String(new Date().getFullYear())]]) {
     sqlite.prepare('INSERT OR IGNORE INTO pengaturan(kunci,nilai) VALUES(?,?)').run(k,v);
   }

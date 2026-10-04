@@ -325,8 +325,9 @@
     updateClock(); setInterval(updateClock, 1000);
 
     // ── Kontrol jam pulang ────────────────────────────────────────────────────
-    let jamPulangMenit = null;   // jam pulang dalam menit dari tengah malam
-    let sudahUnlock    = false;  // flag agar notif hanya muncul sekali
+    let jamMulaiPulangMenit = 16 * 60; // default 16:00 WIB
+    let jamTutupPulangMenit = 21 * 60; // default 21:00 WIB — batas akhir
+    let sudahUnlock = false;
 
     // Konversi "HH:MM" → total menit
     function toMenit(hhmm) {
@@ -334,15 +335,21 @@
       return h * 60 + m;
     }
 
-    // Cek apakah sekarang sudah >= jam pulang
-    function cekWaktuPulang() {
-      if (jamPulangMenit === null) return;
-      const now  = new Date();
-      const menit = now.getHours() * 60 + now.getMinutes();
-      const btnPulang  = document.getElementById('btnModePulang');
-      const infoEl     = document.getElementById('pulangInfo');
+    // Ambil menit WIB sekarang (utcOffset +7 jam)
+    function menitWIBSekarang() {
+      const now = new Date();
+      // UTC menit + 7*60 offset
+      const utcMenit = now.getUTCHours() * 60 + now.getUTCMinutes();
+      return (utcMenit + 7 * 60) % (24 * 60); // modulo agar tidak > 1440
+    }
 
-      if (menit >= jamPulangMenit) {
+    // Cek apakah sekarang dalam rentang jam pulang
+    function cekWaktuPulang() {
+      const menit     = menitWIBSekarang();
+      const btnPulang = document.getElementById('btnModePulang');
+      const infoEl    = document.getElementById('pulangInfo');
+
+      if (menit >= jamMulaiPulangMenit && menit <= jamTutupPulangMenit) {
         // ── BUKA tombol pulang ──
         if (btnPulang.disabled) {
           btnPulang.disabled = false;
@@ -351,49 +358,48 @@
 
           if (!sudahUnlock) {
             sudahUnlock = true;
-            // Tampilkan banner
             const banner = document.getElementById('bannerPulang');
             banner.style.display = 'block';
-            // Otomatis switch ke mode pulang
             setMode('pulang');
-            // Sembunyikan banner setelah 8 detik
             setTimeout(() => { banner.style.display = 'none'; }, 8000);
           }
         }
-      } else {
-        // ── KUNCI tombol pulang ──
+      } else if (menit < jamMulaiPulangMenit) {
+        // Belum waktunya
         btnPulang.disabled = true;
         btnPulang.classList.add('locked');
-        // Hitung sisa waktu
-        const sisaMenit = jamPulangMenit - menit;
+        const sisaMenit = jamMulaiPulangMenit - menit;
         const sisaJam   = Math.floor(sisaMenit / 60);
         const sisaMin   = sisaMenit % 60;
-        const h = String(Math.floor(jamPulangMenit / 60)).padStart(2, '0');
-        const m = String(jamPulangMenit % 60).padStart(2, '0');
+        const hStr = String(Math.floor(jamMulaiPulangMenit / 60)).padStart(2,'0');
+        const mStr = String(jamMulaiPulangMenit % 60).padStart(2,'0');
         if (sisaJam > 0) {
-          infoEl.textContent = `Buka pukul ${h}:${m} (${sisaJam}j ${sisaMin}m lagi)`;
+          infoEl.textContent = `Buka pukul ${hStr}:${mStr} (${sisaJam}j ${sisaMin}m lagi)`;
         } else {
-          infoEl.textContent = `Buka pukul ${h}:${m} (${sisaMin} mnt lagi)`;
+          infoEl.textContent = `Buka pukul ${hStr}:${mStr} (${sisaMin} mnt lagi)`;
         }
+      } else {
+        // Sudah lewat jam tutup
+        btnPulang.disabled = true;
+        btnPulang.classList.add('locked');
+        infoEl.textContent = 'Waktu absen pulang sudah tutup';
       }
     }
 
-    // Ambil jam pulang dari pengaturan, lalu mulai cek tiap menit
+    // Ambil jam pulang dari pengaturan
     async function initWaktuPulang() {
       try {
         const res  = await fetch('/pengaturan/api/semua');
         const json = await res.json();
-        if (json.success && json.data.jam_pulang) {
-          jamPulangMenit = toMenit(json.data.jam_pulang);
-        } else {
-          // Default 17:00 jika tidak ada setting
-          jamPulangMenit = 17 * 60;
+        if (json.success) {
+          if (json.data.jam_pulang)       jamMulaiPulangMenit = toMenit(json.data.jam_pulang);
+          if (json.data.jam_tutup_pulang) jamTutupPulangMenit = toMenit(json.data.jam_tutup_pulang);
         }
       } catch(e) {
-        jamPulangMenit = 17 * 60; // fallback
+        // pakai default
       }
-      cekWaktuPulang();                        // langsung cek saat load
-      setInterval(cekWaktuPulang, 30 * 1000);  // cek tiap 30 detik
+      cekWaktuPulang();
+      setInterval(cekWaktuPulang, 30 * 1000);
     }
 
     initWaktuPulang();

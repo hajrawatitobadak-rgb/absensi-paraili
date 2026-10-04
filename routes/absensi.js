@@ -40,7 +40,8 @@ router.post('/api/masuk', async (req,res)=>{
     if(!lok) return res.json({success:false,message:'Lokasi kantor belum dikonfigurasi'});
     const jarak=hitungJarak(+lat,+lng,lok.lat,lok.lng);
     if(jarak>lok.radius) return res.json({success:false,message:`Anda ${jarak}m dari kantor. Maks ${lok.radius}m`,jarak});
-    const tanggal=moment().format('YYYY-MM-DD'),jam=moment().format('HH:mm:ss');
+    // Gunakan WIB (UTC+7) agar Railway tidak pakai UTC
+    const tanggal=moment().utcOffset('+07:00').format('YYYY-MM-DD'),jam=moment().utcOffset('+07:00').format('HH:mm:ss');
     const ex=await db.get('SELECT * FROM absensi WHERE karyawan_id=? AND tanggal=?',[karyawan_id,tanggal]);
     if(ex?.jam_masuk) return res.json({success:false,message:`Sudah absen masuk pukul ${ex.jam_masuk}`});
     const foto=simpanFoto(foto_base64,karyawan_id,'masuk');
@@ -60,20 +61,33 @@ router.post('/api/pulang', async (req,res)=>{
     const lok=await db.get('SELECT * FROM lokasi_kantor WHERE aktif=1 LIMIT 1');
     const jarak=lok?hitungJarak(+lat,+lng,lok.lat,lok.lng):0;
     if(lok&&jarak>lok.radius) return res.json({success:false,message:`Anda ${jarak}m dari kantor. Maks ${lok.radius}m`,jarak});
-    const tanggal=moment().format('YYYY-MM-DD'),jam=moment().format('HH:mm:ss');
+    const tanggal=moment().utcOffset('+07:00').format('YYYY-MM-DD'),jam=moment().utcOffset('+07:00').format('HH:mm:ss');
 
-    // ── Validasi: belum waktunya pulang ──────────────────────────────────────
-    const jamPulangRow = await db.get("SELECT nilai FROM pengaturan WHERE kunci='jam_pulang'");
-    const jamPulang    = jamPulangRow?.nilai || '17:00';
-    const [jp_h, jp_m] = jamPulang.split(':').map(Number);
-    const now          = new Date();
-    const menitSekarang= now.getHours() * 60 + now.getMinutes();
-    const menitPulang  = jp_h * 60 + jp_m;
-    if (menitSekarang < menitPulang) {
+    // ── Validasi waktu pulang (WIB = UTC+7) ──────────────────────────────────
+    const jamPulangRow   = await db.get("SELECT nilai FROM pengaturan WHERE kunci='jam_pulang'");
+    const jamTutupRow    = await db.get("SELECT nilai FROM pengaturan WHERE kunci='jam_tutup_pulang'");
+    const jamMulaiPulang = jamPulangRow?.nilai   || '16:00';
+    const jamTutupPulang = jamTutupRow?.nilai    || '21:00';
+
+    // Ambil menit WIB dari jam server (bukan UTC)
+    const nowWIB         = moment().utcOffset('+07:00');
+    const menitWIB       = nowWIB.hours() * 60 + nowWIB.minutes();
+    const [bm_h, bm_m]  = jamMulaiPulang.split(':').map(Number);
+    const [bt_h, bt_m]  = jamTutupPulang.split(':').map(Number);
+    const menitMulai     = bm_h * 60 + bm_m;
+    const menitTutup     = bt_h * 60 + bt_m;
+
+    if (menitWIB < menitMulai) {
       return res.json({
-        success: false,
-        message: `Belum waktunya pulang. Absen pulang dibuka pukul ${jamPulang} WIB.`,
-        jamPulang
+        success:  false,
+        message:  `Belum waktunya pulang. Absen pulang dibuka pukul ${jamMulaiPulang} WIB.`,
+        jamPulang: jamMulaiPulang
+      });
+    }
+    if (menitWIB > menitTutup) {
+      return res.json({
+        success:  false,
+        message:  `Waktu absen pulang sudah tutup (batas pukul ${jamTutupPulang} WIB).`
       });
     }
 

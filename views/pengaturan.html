@@ -68,14 +68,22 @@
                   <input type="time" id="jam_masuk" class="form-control" value="08:00">
                 </div>
                 <div class="form-group">
-                  <label>Jam Pulang</label>
-                  <input type="time" id="jam_pulang" class="form-control" value="17:00">
+                  <label>Jam Mulai Absen Pulang</label>
+                  <input type="time" id="jam_pulang" class="form-control" value="16:00">
+                  <small class="text-muted">Tombol absen pulang mulai terbuka dari jam ini</small>
                 </div>
               </div>
-              <div class="form-group">
-                <label>Toleransi Keterlambatan (menit)</label>
-                <input type="number" id="toleransi_menit" class="form-control" min="0" max="120" value="30">
-                <small class="text-muted">Karyawan masih dianggap tepat waktu jika datang dalam batas toleransi ini</small>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Batas Akhir Absen Pulang</label>
+                  <input type="time" id="jam_tutup_pulang" class="form-control" value="21:00">
+                  <small class="text-muted">Tombol absen pulang dikunci kembali setelah jam ini</small>
+                </div>
+                <div class="form-group">
+                  <label>Toleransi Keterlambatan (menit)</label>
+                  <input type="number" id="toleransi_menit" class="form-control" min="0" max="120" value="30">
+                  <small class="text-muted">Masih dianggap tepat waktu dalam batas ini</small>
+                </div>
               </div>
               <div id="alertJam" class="alert hidden"></div>
               <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan</button>
@@ -182,11 +190,12 @@
       const json = await res.json();
       if (!json.success) return;
       const d = json.data;
-      if (d.nama_instansi)   document.getElementById('nama_instansi').value   = d.nama_instansi;
-      if (d.tahun_anggaran)  document.getElementById('tahun_anggaran').value  = d.tahun_anggaran;
-      if (d.jam_masuk)       document.getElementById('jam_masuk').value       = d.jam_masuk;
-      if (d.jam_pulang)      document.getElementById('jam_pulang').value      = d.jam_pulang;
-      if (d.toleransi_menit) document.getElementById('toleransi_menit').value = d.toleransi_menit;
+      if (d.nama_instansi)    document.getElementById('nama_instansi').value    = d.nama_instansi;
+      if (d.tahun_anggaran)   document.getElementById('tahun_anggaran').value   = d.tahun_anggaran;
+      if (d.jam_masuk)        document.getElementById('jam_masuk').value        = d.jam_masuk;
+      if (d.jam_pulang)       document.getElementById('jam_pulang').value       = d.jam_pulang;
+      if (d.jam_tutup_pulang) document.getElementById('jam_tutup_pulang').value = d.jam_tutup_pulang;
+      if (d.toleransi_menit)  document.getElementById('toleransi_menit').value  = d.toleransi_menit;
     }
 
     async function loadLokasi() {
@@ -229,9 +238,10 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          jam_masuk:       document.getElementById('jam_masuk').value,
-          jam_pulang:      document.getElementById('jam_pulang').value,
-          toleransi_menit: document.getElementById('toleransi_menit').value
+          jam_masuk:         document.getElementById('jam_masuk').value,
+          jam_pulang:        document.getElementById('jam_pulang').value,
+          jam_tutup_pulang:  document.getElementById('jam_tutup_pulang').value,
+          toleransi_menit:   document.getElementById('toleransi_menit').value
         })
       });
       const json = await res.json();
