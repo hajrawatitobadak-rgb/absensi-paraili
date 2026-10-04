@@ -156,7 +156,10 @@ app.use('/karyawan',   karyawanRoutes);
 app.use('/laporan',    laporanRoutes);
 app.use('/pengaturan', pengaturanRoutes);
 
-// ─── Reset Database — hapus semua data (butuh konfirmasi) ───────────────────
+// ─── 11. Halaman HTML ────────────────────────────────────────────────────────
+const { requireAuth } = require('./middleware/auth');
+
+// ─── Reset Database — letakkan SETELAH requireAuth dideklarasikan ─────────────
 app.post('/api/reset-database', requireAuth, async (req, res) => {
   const { konfirmasi } = req.body;
   if (konfirmasi !== 'HAPUS SEMUA DATA') {
@@ -164,10 +167,8 @@ app.post('/api/reset-database', requireAuth, async (req, res) => {
   }
   try {
     const db = require('./database/db-adapter');
-    // Hapus semua data transaksi — urutan penting (FK constraint)
     await db.run('DELETE FROM absensi',  []);
     await db.run('DELETE FROM karyawan', []);
-    // Reset sequence ID jika PostgreSQL
     if (db.isPG && db.pool) {
       await db.pool.query('ALTER SEQUENCE IF EXISTS absensi_id_seq  RESTART WITH 1');
       await db.pool.query('ALTER SEQUENCE IF EXISTS karyawan_id_seq RESTART WITH 1');
@@ -178,9 +179,6 @@ app.post('/api/reset-database', requireAuth, async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 });
-
-// ─── 11. Halaman HTML ────────────────────────────────────────────────────────
-const { requireAuth } = require('./middleware/auth');
 
 app.get('/', (req, res) => {
   res.redirect(req.session?.user ? '/dashboard' : '/login');
