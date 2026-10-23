@@ -405,32 +405,24 @@ input, select, textarea { font-family: inherit; }
   .content          { padding: 1rem; }
 }
 
-/* ── Logo strip di atas sidebar ─────────────────────────────────────────── */
+/* ── Logo sidebar ──────────────────────────────────────────────── */
 .sidebar-logos {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: .5rem;
-  padding: .75rem .5rem .4rem;
+  padding: .6rem .5rem .35rem;
   background: rgba(255,255,255,.05);
   border-bottom: 1px solid rgba(255,255,255,.08);
 }
-
 .sb-logo {
-  width: 44px;
-  height: 44px;
+  width: 40px !important;
+  height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
   object-fit: contain;
-  object-position: center;
   flex-shrink: 0;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,.4));
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.35));
 }
-
-/* Sidebar collapsed → logo lebih kecil */
-.sidebar.collapsed .sidebar-logos { gap: .25rem; padding: .5rem .35rem .3rem; }
-.sidebar.collapsed .sb-logo       { width: 24px; height: 24px; }
-
-/* Layar kecil */
-@media (max-width: 576px) {
-  .sidebar-logos { padding: .5rem .3rem .3rem; }
-  .sb-logo       { width: 28px; height: 28px; }
-}
+.sidebar.collapsed .sidebar-logos { padding: .45rem .3rem .25rem; }
+.sidebar.collapsed .sb-logo { width: 22px !important; height: 22px !important; max-width: 22px !important; max-height: 22px !important; }
