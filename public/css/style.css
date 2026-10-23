@@ -404,3 +404,33 @@ input, select, textarea { font-family: inherit; }
   .stats-grid       { grid-template-columns: 1fr 1fr; }
   .content          { padding: 1rem; }
 }
+
+/* ── Logo strip di atas sidebar ─────────────────────────────────────────── */
+.sidebar-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .75rem .5rem .4rem;
+  background: rgba(255,255,255,.05);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.sb-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  object-position: center;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.4));
+}
+
+/* Sidebar collapsed → logo lebih kecil */
+.sidebar.collapsed .sidebar-logos { gap: .25rem; padding: .5rem .35rem .3rem; }
+.sidebar.collapsed .sb-logo       { width: 24px; height: 24px; }
+
+/* Layar kecil */
+@media (max-width: 576px) {
+  .sidebar-logos { padding: .5rem .3rem .3rem; }
+  .sb-logo       { width: 28px; height: 28px; }
+}
